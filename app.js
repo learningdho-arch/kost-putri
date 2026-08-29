@@ -11,7 +11,7 @@
  */
 
 const API_URL =
-  'https://script.google.com/macros/s/AKfycbyQKGeA74rDh6jv1aQn2t0wAoIxmA2lhIlVY_ToR6gsX0BsWygwvLGMiXnMIO0OFjJWzw/exec;
+  'https://script.google.com/macros/s/AKfycbyQKGeA74rDh6jv1aQn2t0wAoIxmA2lhIlVY_ToR6gsX0BsWygwvLGMiXnMIO0OFjJWzw/exec';
 
 
 
@@ -42,6 +42,8 @@ async function apiGet(action) {
 
 
   return await response.json();
+
+}
 
 }
 
