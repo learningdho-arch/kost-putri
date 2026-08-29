@@ -1,165 +1,212 @@
+```javascript
 /*************************************************
  * KOST PUTRI MANAGEMENT SYSTEM
- * GITHUB PAGES → APPS SCRIPT → GOOGLE SHEETS
+ * APP.JS
+ * GITHUB PAGES -> GOOGLE APPS SCRIPT -> GOOGLE SHEETS
  *************************************************/
 
 
 /* =================================================
-   URL GOOGLE APPS SCRIPT WEB APP
+   GOOGLE APPS SCRIPT API
    ================================================= */
 
 const API_URL =
-  'https://script.google.com/macros/s/AKfycbyQKGeA74rDh6jv1aQn2t0wAoIxmA2lhIlVY_ToR6gsX0BsWygwvLGMiXnMIO0OFjJWzw/exec';
+  'https://script.google.com/macros/s/AKfycbyQKGeA74rDh6jv1aQn2t0wAoIxmA2lhIlVY_ToR6gsX0sBWygwvLGMiXnMIO0OFjJWzw/exec';
 
 
 /* =================================================
-   API GET
+   JSONP REQUEST
    ================================================= */
 
-async function apiGet(action) {
+function apiGet(action, params = {}) {
 
-  const url =
-    API_URL +
-    '?action=' +
-    encodeURIComponent(action);
+  return new Promise(function(resolve, reject) {
 
-  try {
+    const callbackName =
+      'kostCallback_' +
+      Date.now() +
+      '_' +
+      Math.floor(Math.random() * 100000);
 
-    const response = await fetch(url, {
-      method: 'GET',
-      redirect: 'follow'
+    const script =
+      document.createElement('script');
+
+    let completed = false;
+
+
+    const timeout =
+      setTimeout(function() {
+
+        if (completed) {
+          return;
+        }
+
+        completed = true;
+
+        removeScript();
+
+        reject(
+          new Error(
+            'Request timeout. API tidak merespons.'
+          )
+        );
+
+      }, 20000);
+
+
+    function removeScript() {
+
+      clearTimeout(timeout);
+
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+
+      try {
+        delete window[callbackName];
+      } catch (error) {
+        window[callbackName] = null;
+      }
+
+    }
+
+
+    window[callbackName] =
+      function(response) {
+
+        if (completed) {
+          return;
+        }
+
+        completed = true;
+
+        removeScript();
+
+        resolve(response);
+
+      };
+
+
+    const query =
+      new URLSearchParams();
+
+
+    query.set(
+      'action',
+      action
+    );
+
+
+    query.set(
+      'callback',
+      callbackName
+    );
+
+
+    Object.keys(params).forEach(function(key) {
+
+      const value =
+        params[key];
+
+      if (
+        value !== undefined &&
+        value !== null
+      ) {
+
+        query.set(
+          key,
+          value
+        );
+
+      }
+
     });
 
-    if (!response.ok) {
 
-      throw new Error(
-        'HTTP Error ' + response.status
-      );
+    script.src =
+      API_URL +
+      '?' +
+      query.toString();
 
-    }
 
-    const text = await response.text();
+    script.async = true;
 
-    let result;
 
-    try {
+    script.onerror =
+      function() {
 
-      result = JSON.parse(text);
+        if (completed) {
+          return;
+        }
 
-    } catch (error) {
+        completed = true;
 
-      console.error(
-        'Response Apps Script:',
-        text
-      );
+        removeScript();
 
-      throw new Error(
-        'Response dari Apps Script bukan JSON.'
-      );
+        reject(
+          new Error(
+            'Gagal menghubungi Google Apps Script.'
+          )
+        );
 
-    }
+      };
 
-    return result;
 
-  } catch (error) {
-
-    console.error(
-      'API GET Error:',
-      error
+    document.head.appendChild(
+      script
     );
 
-    throw error;
-
-  }
+  });
 
 }
 
 
 /* =================================================
-   API POST
+   TEST API
    ================================================= */
 
-async function apiPost(data) {
+async function testAPI() {
 
   try {
 
-    const response = await fetch(
-      API_URL,
-      {
-        method: 'POST',
-        redirect: 'follow',
-        headers: {
-          'Content-Type':
-            'text/plain;charset=utf-8'
-        },
-        body: JSON.stringify(data)
-      }
+    const result =
+      await apiGet('test');
+
+
+    console.log(
+      'API TEST:',
+      result
     );
 
-    if (!response.ok) {
+
+    if (
+      !result ||
+      result.success !== true
+    ) {
 
       throw new Error(
-        'HTTP Error ' +
-        response.status
+        result &&
+        result.message
+          ? result.message
+          : 'API tidak aktif.'
       );
 
     }
 
-    const text =
-      await response.text();
-
-    let result;
-
-    try {
-
-      result =
-        JSON.parse(text);
-
-    } catch (error) {
-
-      console.error(
-        'Response Apps Script:',
-        text
-      );
-
-      throw new Error(
-        'Response dari Apps Script bukan JSON.'
-      );
-
-    }
 
     return result;
+
 
   } catch (error) {
 
     console.error(
-      'API POST Error:',
+      'TEST API ERROR:',
       error
     );
 
     throw error;
 
   }
-
-}
-
-
-/* =================================================
-   FORMAT RUPIAH
-   ================================================= */
-
-function formatRupiah(value) {
-
-  return new Intl.NumberFormat(
-    'id-ID',
-    {
-      style: 'currency',
-      currency: 'IDR',
-      maximumFractionDigits: 0
-    }
-  ).format(
-    Number(value) || 0
-  );
 
 }
 
@@ -170,145 +217,88 @@ function formatRupiah(value) {
 
 async function loadDashboard() {
 
-  const message =
-    document.getElementById(
-      'dashboardMessage'
-    );
-
   try {
-
-    if (message) {
-
-      message.innerText =
-        'Memuat data...';
-
-    }
 
     const result =
       await apiGet(
         'dashboard'
       );
 
-    if (!result.success) {
+
+    console.log(
+      'DASHBOARD:',
+      result
+    );
+
+
+    if (
+      !result ||
+      result.success !== true
+    ) {
 
       throw new Error(
-        result.message ||
-        'Gagal mengambil data dashboard.'
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal mengambil dashboard.'
       );
 
     }
+
 
     const data =
       result.data || {};
 
 
-    const totalKamar =
-      document.getElementById(
-        'totalKamar'
-      );
-
-    const kamarKosong =
-      document.getElementById(
-        'kamarKosong'
-      );
-
-    const kamarTerisi =
-      document.getElementById(
-        'kamarTerisi'
-      );
-
-    const totalPenghuni =
-      document.getElementById(
-        'totalPenghuni'
-      );
-
-    const bookingAktif =
-      document.getElementById(
-        'bookingAktif'
-      );
-
-    const totalPendapatan =
-      document.getElementById(
-        'totalPendapatan'
-      );
+    setElementText(
+      'totalKamar',
+      data.totalKamar || 0
+    );
 
 
-    if (totalKamar) {
-
-      totalKamar.innerText =
-        data.totalKamar || 0;
-
-    }
+    setElementText(
+      'kamarTerisi',
+      data.kamarTerisi || 0
+    );
 
 
-    if (kamarKosong) {
-
-      kamarKosong.innerText =
-        data.kamarKosong || 0;
-
-    }
+    setElementText(
+      'kamarKosong',
+      data.kamarKosong || 0
+    );
 
 
-    if (kamarTerisi) {
-
-      kamarTerisi.innerText =
-        data.kamarTerisi || 0;
-
-    }
+    setElementText(
+      'totalPenghuni',
+      data.totalPenghuni || 0
+    );
 
 
-    if (totalPenghuni) {
-
-      totalPenghuni.innerText =
-        data.totalPenghuni || 0;
-
-    }
+    setElementText(
+      'bookingAktif',
+      data.bookingAktif || 0
+    );
 
 
-    if (bookingAktif) {
-
-      bookingAktif.innerText =
-        data.bookingAktif || 0;
-
-    }
-
-
-    if (totalPendapatan) {
-
-      totalPendapatan.innerText =
-        formatRupiah(
-          data.totalPendapatan || 0
-        );
-
-    }
+    setElementText(
+      'totalPendapatan',
+      formatRupiah(
+        data.totalPendapatan || 0
+      )
+    );
 
 
-    if (message) {
+    return result;
 
-      message.innerText =
-        'Data berhasil dimuat dari Google Sheets.';
-
-    }
-
-
-    setApiStatus(true);
 
   } catch (error) {
 
     console.error(
-      'Dashboard Error:',
+      'DASHBOARD ERROR:',
       error
     );
 
-    if (message) {
-
-      message.innerText =
-        'Gagal mengambil data: ' +
-        error.message;
-
-    }
-
-    setApiStatus(false);
+    throw error;
 
   }
 
@@ -321,123 +311,39 @@ async function loadDashboard() {
 
 async function loadKamar() {
 
-  try {
-
-    const result =
-      await apiGet(
-        'kamar'
-      );
-
-    if (!result.success) {
-
-      throw new Error(
-        result.message ||
-        'Gagal mengambil data kamar.'
-      );
-
-    }
-
-    const table =
-      document.getElementById(
-        'kamarTable'
-      );
-
-    if (!table) {
-
-      console.warn(
-        'Element kamarTable tidak ditemukan.'
-      );
-
-      return;
-
-    }
-
-    table.innerHTML = '';
-
-
-    if (
-      !result.data ||
-      result.data.length === 0
-    ) {
-
-      table.innerHTML = `
-        <tr>
-          <td
-            colspan="7"
-            style="text-align:center">
-            Belum ada data kamar.
-          </td>
-        </tr>
-      `;
-
-      return;
-
-    }
-
-
-    result.data.forEach(
-      function(row) {
-
-        const tr =
-          document.createElement(
-            'tr'
-          );
-
-
-        tr.innerHTML = `
-
-          <td>
-            ${escapeHtml(row.KAMAR_ID)}
-          </td>
-
-          <td>
-            ${escapeHtml(row.NOMOR_KAMAR)}
-          </td>
-
-          <td>
-            ${escapeHtml(row.LANTAI)}
-          </td>
-
-          <td>
-            ${escapeHtml(row.TIPE)}
-          </td>
-
-          <td>
-            ${formatRupiah(row.HARGA)}
-          </td>
-
-          <td>
-            ${escapeHtml(row.STATUS)}
-          </td>
-
-          <td>
-            ${escapeHtml(row.FASILITAS)}
-          </td>
-
-        `;
-
-
-        table.appendChild(
-          tr
-        );
-
-      }
+  const result =
+    await apiGet(
+      'kamar'
     );
 
 
-  } catch (error) {
+  console.log(
+    'KAMAR:',
+    result
+  );
 
-    console.error(
-      'Load Kamar Error:',
-      error
-    );
 
-    alert(
-      'Gagal mengambil data kamar: ' +
-      error.message
+  if (
+    !result ||
+    result.success !== true
+  ) {
+
+    throw new Error(
+      result &&
+      result.message
+        ? result.message
+        : 'Gagal mengambil data kamar.'
     );
 
   }
+
+
+  renderKamar(
+    result.data || []
+  );
+
+
+  return result;
 
 }
 
@@ -448,246 +354,140 @@ async function loadKamar() {
 
 async function loadPenghuni() {
 
-  try {
-
-    const result =
-      await apiGet(
-        'penghuni'
-      );
-
-    if (!result.success) {
-
-      throw new Error(
-        result.message ||
-        'Gagal mengambil data penghuni.'
-      );
-
-    }
-
-
-    const table =
-      document.getElementById(
-        'penghuniTable'
-      );
-
-    if (!table) {
-
-      console.warn(
-        'Element penghuniTable tidak ditemukan.'
-      );
-
-      return;
-
-    }
-
-
-    table.innerHTML = '';
-
-
-    if (
-      !result.data ||
-      result.data.length === 0
-    ) {
-
-      table.innerHTML = `
-        <tr>
-          <td
-            colspan="6"
-            style="text-align:center">
-            Belum ada data penghuni.
-          </td>
-        </tr>
-      `;
-
-      return;
-
-    }
-
-
-    result.data.forEach(
-      function(row) {
-
-        const tr =
-          document.createElement(
-            'tr'
-          );
-
-
-        tr.innerHTML = `
-
-          <td>
-            ${escapeHtml(row.PENGHUNI_ID)}
-          </td>
-
-          <td>
-            ${escapeHtml(row.NAMA)}
-          </td>
-
-          <td>
-            ${escapeHtml(row.NO_HP)}
-          </td>
-
-          <td>
-            ${escapeHtml(row.KAMAR_ID)}
-          </td>
-
-          <td>
-            ${formatDate(row.TANGGAL_MASUK)}
-          </td>
-
-          <td>
-            ${escapeHtml(row.STATUS)}
-          </td>
-
-        `;
-
-
-        table.appendChild(
-          tr
-        );
-
-      }
+  const result =
+    await apiGet(
+      'penghuni'
     );
 
 
-  } catch (error) {
+  console.log(
+    'PENGHUNI:',
+    result
+  );
 
-    console.error(
-      'Load Penghuni Error:',
-      error
-    );
 
-    alert(
-      'Gagal mengambil data penghuni: ' +
-      error.message
+  if (
+    !result ||
+    result.success !== true
+  ) {
+
+    throw new Error(
+      result &&
+      result.message
+        ? result.message
+        : 'Gagal mengambil data penghuni.'
     );
 
   }
+
+
+  renderPenghuni(
+    result.data || []
+  );
+
+
+  return result;
 
 }
 
 
 /* =================================================
-   SIMPAN KAMAR
+   LOAD PEMBAYARAN
    ================================================= */
 
-async function saveKamar(event) {
+async function loadPembayaran() {
 
-  event.preventDefault();
-
-
-  const nomorKamar =
-    document.getElementById(
-      'nomorKamar'
-    );
-
-  const lantai =
-    document.getElementById(
-      'lantai'
-    );
-
-  const tipe =
-    document.getElementById(
-      'tipe'
-    );
-
-  const harga =
-    document.getElementById(
-      'harga'
-    );
-
-  const status =
-    document.getElementById(
-      'statusKamar'
-    );
-
-  const fasilitas =
-    document.getElementById(
-      'fasilitas'
-    );
-
-  const catatan =
-    document.getElementById(
-      'catatanKamar'
+  const result =
+    await apiGet(
+      'pembayaran'
     );
 
 
-  const data = {
+  console.log(
+    'PEMBAYARAN:',
+    result
+  );
 
-    action:
-      'addKamar',
 
-    nomorKamar:
-      nomorKamar
-        ? nomorKamar.value
-        : '',
+  if (
+    !result ||
+    result.success !== true
+  ) {
 
-    lantai:
-      lantai
-        ? lantai.value
-        : '',
+    throw new Error(
+      result &&
+      result.message
+        ? result.message
+        : 'Gagal mengambil data pembayaran.'
+    );
 
-    tipe:
-      tipe
-        ? tipe.value
-        : '',
+  }
 
-    harga:
-      harga
-        ? harga.value
-        : '',
 
-    status:
-      status
-        ? status.value
-        : 'KOSONG',
+  renderPembayaran(
+    result.data || []
+  );
 
-    fasilitas:
-      fasilitas
-        ? fasilitas.value
-        : '',
 
-    catatan:
-      catatan
-        ? catatan.value
-        : ''
+  return result;
 
-  };
+}
+
+
+/* =================================================
+   TAMBAH KAMAR
+   ================================================= */
+
+async function addKamar(data) {
+
+  if (
+    !data ||
+    !data.nomorKamar
+  ) {
+
+    alert(
+      'Nomor kamar wajib diisi.'
+    );
+
+    return;
+
+  }
 
 
   try {
 
     const result =
-      await apiPost(
+      await apiGet(
+        'addKamar',
         data
       );
 
 
-    if (!result.success) {
+    console.log(
+      'ADD KAMAR:',
+      result
+    );
+
+
+    if (
+      !result ||
+      result.success !== true
+    ) {
 
       throw new Error(
-        result.message ||
-        'Gagal menyimpan kamar.'
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal menyimpan kamar.'
       );
 
     }
 
 
     alert(
-      'Kamar berhasil disimpan.'
+      result.message ||
+      'Kamar berhasil ditambahkan.'
     );
-
-
-    closeModal(
-      'kamarModal'
-    );
-
-
-    if (event.target) {
-
-      event.target.reset();
-
-    }
 
 
     await loadKamar();
@@ -695,12 +495,16 @@ async function saveKamar(event) {
     await loadDashboard();
 
 
+    return result;
+
+
   } catch (error) {
 
     console.error(
-      'Save Kamar Error:',
+      'ADD KAMAR ERROR:',
       error
     );
+
 
     alert(
       'Gagal menyimpan kamar: ' +
@@ -713,138 +517,59 @@ async function saveKamar(event) {
 
 
 /* =================================================
-   SIMPAN PENGHUNI
+   TAMBAH PENGHUNI
    ================================================= */
 
-async function savePenghuni(event) {
+async function addPenghuni(data) {
 
-  event.preventDefault();
+  if (
+    !data ||
+    !data.nama
+  ) {
 
-
-  const nama =
-    document.getElementById(
-      'namaPenghuni'
+    alert(
+      'Nama penghuni wajib diisi.'
     );
 
-  const nik =
-    document.getElementById(
-      'nik'
-    );
+    return;
 
-  const noHp =
-    document.getElementById(
-      'noHp'
-    );
-
-  const email =
-    document.getElementById(
-      'email'
-    );
-
-  const kamarId =
-    document.getElementById(
-      'kamarId'
-    );
-
-  const tanggalMasuk =
-    document.getElementById(
-      'tanggalMasuk'
-    );
-
-  const catatan =
-    document.getElementById(
-      'catatanPenghuni'
-    );
-
-
-  const data = {
-
-    action:
-      'addPenghuni',
-
-    nama:
-      nama
-        ? nama.value
-        : '',
-
-    nik:
-      nik
-        ? nik.value
-        : '',
-
-    noHp:
-      noHp
-        ? noHp.value
-        : '',
-
-    email:
-      email
-        ? email.value
-        : '',
-
-    kamarId:
-      kamarId
-        ? kamarId.value
-        : '',
-
-    tanggalMasuk:
-      tanggalMasuk
-        ? tanggalMasuk.value
-        : '',
-
-    catatan:
-      catatan
-        ? catatan.value
-        : ''
-
-  };
+  }
 
 
   try {
 
-    console.log(
-      'Mengirim data penghuni:',
-      data
-    );
-
-
     const result =
-      await apiPost(
+      await apiGet(
+        'addPenghuni',
         data
       );
 
 
     console.log(
-      'Response penghuni:',
+      'ADD PENGHUNI:',
       result
     );
 
 
-    if (!result.success) {
+    if (
+      !result ||
+      result.success !== true
+    ) {
 
       throw new Error(
-        result.message ||
-        'Gagal menyimpan penghuni.'
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal menyimpan penghuni.'
       );
 
     }
 
 
     alert(
-      'Penghuni berhasil disimpan.'
+      result.message ||
+      'Penghuni berhasil ditambahkan.'
     );
-
-
-    closeModal(
-      'penghuniModal'
-    );
-
-
-    if (event.target) {
-
-      event.target.reset();
-
-    }
 
 
     await loadPenghuni();
@@ -852,12 +577,16 @@ async function savePenghuni(event) {
     await loadDashboard();
 
 
+    return result;
+
+
   } catch (error) {
 
     console.error(
-      'Save Penghuni Error:',
+      'ADD PENGHUNI ERROR:',
       error
     );
+
 
     alert(
       'Gagal menyimpan penghuni: ' +
@@ -870,219 +599,400 @@ async function savePenghuni(event) {
 
 
 /* =================================================
-   NAVIGATION
+   TAMBAH PEMBAYARAN
    ================================================= */
 
-function showPage(pageName) {
+async function addPembayaran(data) {
 
-  document
-    .querySelectorAll(
-      '.page'
-    )
-    .forEach(
-      function(page) {
+  try {
 
-        page.classList.remove(
-          'active'
-        );
+    const result =
+      await apiGet(
+        'addPembayaran',
+        data
+      );
 
-      }
+
+    console.log(
+      'ADD PEMBAYARAN:',
+      result
     );
 
 
-  const page =
-    document.getElementById(
-      pageName
+    if (
+      !result ||
+      result.success !== true
+    ) {
+
+      throw new Error(
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal menyimpan pembayaran.'
+      );
+
+    }
+
+
+    alert(
+      result.message ||
+      'Pembayaran berhasil disimpan.'
     );
 
 
-  if (page) {
+    await loadPembayaran();
 
-    page.classList.add(
-      'active'
+    await loadDashboard();
+
+
+    return result;
+
+
+  } catch (error) {
+
+    console.error(
+      'ADD PEMBAYARAN ERROR:',
+      error
+    );
+
+
+    alert(
+      'Gagal menyimpan pembayaran: ' +
+      error.message
     );
 
   }
 
-
-  const titles = {
-
-    dashboard:
-      'Dashboard',
-
-    kamar:
-      'Kamar',
-
-    penghuni:
-      'Penghuni',
-
-    booking:
-      'Booking',
-
-    kontrak:
-      'Kontrak',
-
-    pembayaran:
-      'Pembayaran',
-
-    invoice:
-      'Invoice'
-
-  };
+}
 
 
-  const pageTitle =
+/* =================================================
+   RENDER KAMAR
+   ================================================= */
+
+function renderKamar(data) {
+
+  const table =
     document.getElementById(
-      'pageTitle'
+      'kamarTable'
     );
 
 
-  if (pageTitle) {
-
-    pageTitle.innerText =
-      titles[pageName] ||
-      'Dashboard';
-
+  if (!table) {
+    return;
   }
+
+
+  const tbody =
+    table.querySelector(
+      'tbody'
+    );
+
+
+  if (!tbody) {
+    return;
+  }
+
+
+  tbody.innerHTML = '';
 
 
   if (
-    pageName ===
-    'dashboard'
+    !data ||
+    data.length === 0
   ) {
 
-    loadDashboard();
-
-  }
-
-
-  if (
-    pageName ===
-    'kamar'
-  ) {
-
-    loadKamar();
-
-  }
-
-
-  if (
-    pageName ===
-    'penghuni'
-  ) {
-
-    loadPenghuni();
-
-  }
-
-}
-
-
-/* =================================================
-   MODAL KAMAR
-   ================================================= */
-
-function openKamarForm() {
-
-  const modal =
-    document.getElementById(
-      'kamarModal'
-    );
-
-
-  if (modal) {
-
-    modal.classList.add(
-      'show'
-    );
-
-  }
-
-}
-
-
-/* =================================================
-   MODAL PENGHUNI
-   ================================================= */
-
-function openPenghuniForm() {
-
-  const modal =
-    document.getElementById(
-      'penghuniModal'
-    );
-
-
-  if (modal) {
-
-    modal.classList.add(
-      'show'
-    );
-
-  }
-
-}
-
-
-/* =================================================
-   CLOSE MODAL
-   ================================================= */
-
-function closeModal(id) {
-
-  const modal =
-    document.getElementById(
-      id
-    );
-
-
-  if (modal) {
-
-    modal.classList.remove(
-      'show'
-    );
-
-  }
-
-}
-
-
-/* =================================================
-   API STATUS
-   ================================================= */
-
-function setApiStatus(online) {
-
-  const dot =
-    document.getElementById(
-      'apiStatus'
-    );
-
-
-  if (!dot) {
+    tbody.innerHTML =
+      '<tr>' +
+      '<td colspan="20">' +
+      'Belum ada data kamar.' +
+      '</td>' +
+      '</tr>';
 
     return;
 
   }
 
 
-  if (online) {
+  data.forEach(function(row) {
 
-    dot.style.background =
-      'green';
+    const tr =
+      document.createElement(
+        'tr'
+      );
 
-    dot.title =
-      'API Online';
 
-  } else {
+    tr.innerHTML =
+      '<td>' +
+      escapeHTML(row.KAMAR_ID) +
+      '</td>' +
 
-    dot.style.background =
-      'red';
+      '<td>' +
+      escapeHTML(row.NOMOR_KAMAR) +
+      '</td>' +
 
-    dot.title =
-      'API Offline';
+      '<td>' +
+      escapeHTML(row.LANTAI) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.TIPE) +
+      '</td>' +
+
+      '<td>' +
+      formatRupiah(row.HARGA) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.STATUS) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.FASILITAS) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.CATATAN) +
+      '</td>';
+
+
+    tbody.appendChild(
+      tr
+    );
+
+  });
+
+}
+
+
+/* =================================================
+   RENDER PENGHUNI
+   ================================================= */
+
+function renderPenghuni(data) {
+
+  const table =
+    document.getElementById(
+      'penghuniTable'
+    );
+
+
+  if (!table) {
+    return;
+  }
+
+
+  const tbody =
+    table.querySelector(
+      'tbody'
+    );
+
+
+  if (!tbody) {
+    return;
+  }
+
+
+  tbody.innerHTML = '';
+
+
+  if (
+    !data ||
+    data.length === 0
+  ) {
+
+    tbody.innerHTML =
+      '<tr>' +
+      '<td colspan="20">' +
+      'Belum ada data penghuni.' +
+      '</td>' +
+      '</tr>';
+
+    return;
 
   }
+
+
+  data.forEach(function(row) {
+
+    const tr =
+      document.createElement(
+        'tr'
+      );
+
+
+    tr.innerHTML =
+      '<td>' +
+      escapeHTML(row.PENGHUNI_ID) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.NAMA) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.NIK) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.NO_HP) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.EMAIL) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.KAMAR_ID) +
+      '</td>' +
+
+      '<td>' +
+      formatDate(row.TANGGAL_MASUK) +
+      '</td>' +
+
+      '<td>' +
+      formatDate(row.TANGGAL_KELUAR) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.STATUS) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.CATATAN) +
+      '</td>';
+
+
+    tbody.appendChild(
+      tr
+    );
+
+  });
+
+}
+
+
+/* =================================================
+   RENDER PEMBAYARAN
+   ================================================= */
+
+function renderPembayaran(data) {
+
+  const table =
+    document.getElementById(
+      'pembayaranTable'
+    );
+
+
+  if (!table) {
+    return;
+  }
+
+
+  const tbody =
+    table.querySelector(
+      'tbody'
+    );
+
+
+  if (!tbody) {
+    return;
+  }
+
+
+  tbody.innerHTML = '';
+
+
+  if (
+    !data ||
+    data.length === 0
+  ) {
+
+    tbody.innerHTML =
+      '<tr>' +
+      '<td colspan="20">' +
+      'Belum ada data pembayaran.' +
+      '</td>' +
+      '</tr>';
+
+    return;
+
+  }
+
+
+  data.forEach(function(row) {
+
+    const tr =
+      document.createElement(
+        'tr'
+      );
+
+
+    tr.innerHTML =
+      '<td>' +
+      escapeHTML(row.PEMBAYARAN_ID) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.PENGHUNI_ID) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.KONTRAK_ID) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.PERIODE) +
+      '</td>' +
+
+      '<td>' +
+      formatDate(row.TANGGAL_BAYAR) +
+      '</td>' +
+
+      '<td>' +
+      formatRupiah(row.JUMLAH) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.METODE) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.STATUS) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.KETERANGAN) +
+      '</td>';
+
+
+    tbody.appendChild(
+      tr
+    );
+
+  });
+
+}
+
+
+/* =================================================
+   FORMAT RUPIAH
+   ================================================= */
+
+function formatRupiah(value) {
+
+  const number =
+    Number(value) || 0;
+
+
+  return new Intl.NumberFormat(
+    'id-ID',
+    {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0
+    }
+  ).format(number);
 
 }
 
@@ -1094,9 +1004,7 @@ function setApiStatus(online) {
 function formatDate(value) {
 
   if (!value) {
-
     return '-';
-
   }
 
 
@@ -1110,23 +1018,30 @@ function formatDate(value) {
     )
   ) {
 
-    return String(value);
+    return escapeHTML(
+      String(value)
+    );
 
   }
 
 
   return date.toLocaleDateString(
-    'id-ID'
+    'id-ID',
+    {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }
   );
 
 }
 
 
 /* =================================================
-   SECURITY
+   ESCAPE HTML
    ================================================= */
 
-function escapeHtml(value) {
+function escapeHTML(value) {
 
   if (
     value === null ||
@@ -1140,28 +1055,28 @@ function escapeHtml(value) {
 
   return String(value)
 
-    .replaceAll(
-      '&',
+    .replace(
+      /&/g,
       '&amp;'
     )
 
-    .replaceAll(
-      '<',
+    .replace(
+      /</g,
       '&lt;'
     )
 
-    .replaceAll(
-      '>',
+    .replace(
+      />/g,
       '&gt;'
     )
 
-    .replaceAll(
-      '"',
+    .replace(
+      /"/g,
       '&quot;'
     )
 
-    .replaceAll(
-      "'",
+    .replace(
+      /'/g,
       '&#039;'
     );
 
@@ -1169,18 +1084,144 @@ function escapeHtml(value) {
 
 
 /* =================================================
-   START APPLICATION
+   SET TEXT
    ================================================= */
 
-document.addEventListener(
-  'DOMContentLoaded',
-  function() {
+function setElementText(
+  id,
+  value
+) {
 
-    console.log(
-      'Kost Putri Application dimulai...'
+  const element =
+    document.getElementById(
+      id
     );
 
-    loadDashboard();
+
+  if (element) {
+
+    element.textContent =
+      value;
 
   }
-);
+
+}
+
+
+/* =================================================
+   INIT
+   ================================================= */
+
+async function initApp() {
+
+  console.log(
+    '================================='
+  );
+
+  console.log(
+    'KOST PUTRI MANAGEMENT SYSTEM'
+  );
+
+  console.log(
+    'APP START'
+  );
+
+  console.log(
+    '================================='
+  );
+
+
+  try {
+
+    await testAPI();
+
+
+    console.log(
+      'API CONNECTED'
+    );
+
+
+    await loadDashboard();
+
+    await loadKamar();
+
+    await loadPenghuni();
+
+    await loadPembayaran();
+
+
+    console.log(
+      'SEMUA DATA BERHASIL DIMUAT'
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      'INIT ERROR:',
+      error
+    );
+
+
+    alert(
+      'Gagal memuat data: ' +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =================================================
+   START APP
+   ================================================= */
+
+if (
+  document.readyState ===
+  'loading'
+) {
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    initApp
+  );
+
+} else {
+
+  initApp();
+
+}
+
+
+/* =================================================
+   GLOBAL FUNCTIONS
+   ================================================= */
+
+window.apiGet =
+  apiGet;
+
+window.testAPI =
+  testAPI;
+
+window.loadDashboard =
+  loadDashboard;
+
+window.loadKamar =
+  loadKamar;
+
+window.loadPenghuni =
+  loadPenghuni;
+
+window.loadPembayaran =
+  loadPembayaran;
+
+window.addKamar =
+  addKamar;
+
+window.addPenghuni =
+  addPenghuni;
+
+window.addPembayaran =
+  addPembayaran;
+```
