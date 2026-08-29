@@ -4,21 +4,17 @@
  *************************************************/
 
 
-/**
- * =================================================
- * URL GOOGLE APPS SCRIPT WEB APP
- * =================================================
- */
+/* =================================================
+   URL GOOGLE APPS SCRIPT WEB APP
+   ================================================= */
 
 const API_URL =
   'https://script.google.com/macros/s/AKfycbyQKGeA74rDh6jv1aQn2t0wAoIxmA2lhIlVY_ToR6gsX0BsWygwvLGMiXnMIO0OFjJWzw/exec';
 
 
-/**
- * =================================================
- * API GET
- * =================================================
- */
+/* =================================================
+   API GET
+   ================================================= */
 
 async function apiGet(action) {
 
@@ -35,20 +31,20 @@ async function apiGet(action) {
     });
 
     if (!response.ok) {
+
       throw new Error(
         'HTTP Error ' + response.status
       );
+
     }
 
-    const text =
-      await response.text();
+    const text = await response.text();
 
     let result;
 
     try {
 
-      result =
-        JSON.parse(text);
+      result = JSON.parse(text);
 
     } catch (error) {
 
@@ -79,11 +75,9 @@ async function apiGet(action) {
 }
 
 
-/**
- * =================================================
- * API POST
- * =================================================
- */
+/* =================================================
+   API POST
+   ================================================= */
 
 async function apiPost(data) {
 
@@ -98,8 +92,7 @@ async function apiPost(data) {
           'Content-Type':
             'text/plain;charset=utf-8'
         },
-        body:
-          JSON.stringify(data)
+        body: JSON.stringify(data)
       }
     );
 
@@ -151,11 +144,9 @@ async function apiPost(data) {
 }
 
 
-/**
- * =================================================
- * FORMAT RUPIAH
- * =================================================
- */
+/* =================================================
+   FORMAT RUPIAH
+   ================================================= */
 
 function formatRupiah(value) {
 
@@ -173,11 +164,9 @@ function formatRupiah(value) {
 }
 
 
-/**
- * =================================================
- * DASHBOARD
- * =================================================
- */
+/* =================================================
+   DASHBOARD
+   ================================================= */
 
 async function loadDashboard() {
 
@@ -326,11 +315,9 @@ async function loadDashboard() {
 }
 
 
-/**
- * =================================================
- * LOAD KAMAR
- * =================================================
- */
+/* =================================================
+   LOAD KAMAR
+   ================================================= */
 
 async function loadKamar() {
 
@@ -400,45 +387,31 @@ async function loadKamar() {
         tr.innerHTML = `
 
           <td>
-            ${escapeHtml(
-              row.KAMAR_ID
-            )}
+            ${escapeHtml(row.KAMAR_ID)}
           </td>
 
           <td>
-            ${escapeHtml(
-              row.NOMOR_KAMAR
-            )}
+            ${escapeHtml(row.NOMOR_KAMAR)}
           </td>
 
           <td>
-            ${escapeHtml(
-              row.LANTAI
-            )}
+            ${escapeHtml(row.LANTAI)}
           </td>
 
           <td>
-            ${escapeHtml(
-              row.TIPE
-            )}
+            ${escapeHtml(row.TIPE)}
           </td>
 
           <td>
-            ${formatRupiah(
-              row.HARGA
-            )}
+            ${formatRupiah(row.HARGA)}
           </td>
 
           <td>
-            ${escapeHtml(
-              row.STATUS
-            )}
+            ${escapeHtml(row.STATUS)}
           </td>
 
           <td>
-            ${escapeHtml(
-              row.FASILITAS
-            )}
+            ${escapeHtml(row.FASILITAS)}
           </td>
 
         `;
@@ -469,11 +442,9 @@ async function loadKamar() {
 }
 
 
-/**
- * =================================================
- * LOAD PENGHUNI
- * =================================================
- */
+/* =================================================
+   LOAD PENGHUNI
+   ================================================= */
 
 async function loadPenghuni() {
 
@@ -545,39 +516,27 @@ async function loadPenghuni() {
         tr.innerHTML = `
 
           <td>
-            ${escapeHtml(
-              row.PENGHUNI_ID
-            )}
+            ${escapeHtml(row.PENGHUNI_ID)}
           </td>
 
           <td>
-            ${escapeHtml(
-              row.NAMA
-            )}
+            ${escapeHtml(row.NAMA)}
           </td>
 
           <td>
-            ${escapeHtml(
-              row.NO_HP
-            )}
+            ${escapeHtml(row.NO_HP)}
           </td>
 
           <td>
-            ${escapeHtml(
-              row.KAMAR_ID
-            )}
+            ${escapeHtml(row.KAMAR_ID)}
           </td>
 
           <td>
-            ${formatDate(
-              row.TANGGAL_MASUK
-            )}
+            ${formatDate(row.TANGGAL_MASUK)}
           </td>
 
           <td>
-            ${escapeHtml(
-              row.STATUS
-            )}
+            ${escapeHtml(row.STATUS)}
           </td>
 
         `;
@@ -608,11 +567,9 @@ async function loadPenghuni() {
 }
 
 
-/**
- * =================================================
- * SIMPAN KAMAR
- * =================================================
- */
+/* =================================================
+   SIMPAN KAMAR
+   ================================================= */
 
 async function saveKamar(event) {
 
@@ -755,11 +712,9 @@ async function saveKamar(event) {
 }
 
 
-/**
- * =================================================
- * SIMPAN PENGHUNI
- * =================================================
- */
+/* =================================================
+   SIMPAN PENGHUNI
+   ================================================= */
 
 async function savePenghuni(event) {
 
@@ -914,11 +869,9 @@ async function savePenghuni(event) {
 }
 
 
-/**
- * =================================================
- * NAVIGATION
- * =================================================
- */
+/* =================================================
+   NAVIGATION
+   ================================================= */
 
 function showPage(pageName) {
 
@@ -1025,11 +978,9 @@ function showPage(pageName) {
 }
 
 
-/**
- * =================================================
- * MODAL KAMAR
- * =================================================
- */
+/* =================================================
+   MODAL KAMAR
+   ================================================= */
 
 function openKamarForm() {
 
@@ -1050,11 +1001,9 @@ function openKamarForm() {
 }
 
 
-/**
- * =================================================
- * MODAL PENGHUNI
- * =================================================
- */
+/* =================================================
+   MODAL PENGHUNI
+   ================================================= */
 
 function openPenghuniForm() {
 
@@ -1075,11 +1024,9 @@ function openPenghuniForm() {
 }
 
 
-/**
- * =================================================
- * CLOSE MODAL
- * =================================================
- */
+/* =================================================
+   CLOSE MODAL
+   ================================================= */
 
 function closeModal(id) {
 
@@ -1100,11 +1047,9 @@ function closeModal(id) {
 }
 
 
-/**
- * =================================================
- * API STATUS
- * =================================================
- */
+/* =================================================
+   API STATUS
+   ================================================= */
 
 function setApiStatus(online) {
 
@@ -1142,11 +1087,9 @@ function setApiStatus(online) {
 }
 
 
-/**
- * =================================================
- * FORMAT DATE
- * =================================================
- */
+/* =================================================
+   FORMAT DATE
+   ================================================= */
 
 function formatDate(value) {
 
@@ -1179,11 +1122,9 @@ function formatDate(value) {
 }
 
 
-/**
- * =================================================
- * SECURITY
- * =================================================
- */
+/* =================================================
+   SECURITY
+   ================================================= */
 
 function escapeHtml(value) {
 
@@ -1227,11 +1168,9 @@ function escapeHtml(value) {
 }
 
 
-/**
- * =================================================
- * START APPLICATION
- * =================================================
- */
+/* =================================================
+   START APPLICATION
+   ================================================= */
 
 document.addEventListener(
   'DOMContentLoaded',
