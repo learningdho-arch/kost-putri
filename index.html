@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="id">
 
@@ -21,7 +22,9 @@
 <body>
 
 
-<!-- SIDEBAR -->
+<!-- =================================================
+     SIDEBAR
+     ================================================= -->
 
 <aside class="sidebar">
 
@@ -33,42 +36,49 @@
   <nav>
 
     <button
+      type="button"
       onclick="showPage('dashboard')">
       📊 Dashboard
     </button>
 
 
     <button
+      type="button"
       onclick="showPage('kamar')">
       🛏️ Kamar
     </button>
 
 
     <button
+      type="button"
       onclick="showPage('penghuni')">
       👩 Penghuni
     </button>
 
 
     <button
+      type="button"
       onclick="showPage('booking')">
       📅 Booking
     </button>
 
 
     <button
+      type="button"
       onclick="showPage('kontrak')">
       📄 Kontrak
     </button>
 
 
     <button
+      type="button"
       onclick="showPage('pembayaran')">
       💰 Pembayaran
     </button>
 
 
     <button
+      type="button"
       onclick="showPage('invoice')">
       🧾 Invoice
     </button>
@@ -79,7 +89,9 @@
 
 
 
-<!-- MAIN -->
+<!-- =================================================
+     MAIN
+     ================================================= -->
 
 <main class="main">
 
@@ -116,7 +128,9 @@
 
 
 
-  <!-- DASHBOARD -->
+  <!-- =================================================
+       DASHBOARD
+       ================================================= -->
 
   <section
     id="dashboard"
@@ -125,6 +139,8 @@
 
     <div class="cards">
 
+
+      <!-- TOTAL KAMAR -->
 
       <div class="card">
 
@@ -138,8 +154,7 @@
             Total Kamar
           </span>
 
-          <strong
-            id="totalKamar">
+          <strong id="totalKamar">
             0
           </strong>
 
@@ -147,6 +162,8 @@
 
       </div>
 
+
+      <!-- KAMAR KOSONG -->
 
       <div class="card">
 
@@ -160,8 +177,7 @@
             Kamar Kosong
           </span>
 
-          <strong
-            id="kamarKosong">
+          <strong id="kamarKosong">
             0
           </strong>
 
@@ -169,6 +185,8 @@
 
       </div>
 
+
+      <!-- KAMAR TERISI -->
 
       <div class="card">
 
@@ -182,8 +200,7 @@
             Kamar Terisi
           </span>
 
-          <strong
-            id="kamarTerisi">
+          <strong id="kamarTerisi">
             0
           </strong>
 
@@ -191,6 +208,8 @@
 
       </div>
 
+
+      <!-- PENGHUNI -->
 
       <div class="card">
 
@@ -204,8 +223,7 @@
             Penghuni Aktif
           </span>
 
-          <strong
-            id="totalPenghuni">
+          <strong id="totalPenghuni">
             0
           </strong>
 
@@ -213,6 +231,8 @@
 
       </div>
 
+
+      <!-- BOOKING -->
 
       <div class="card">
 
@@ -226,8 +246,7 @@
             Booking
           </span>
 
-          <strong
-            id="bookingAktif">
+          <strong id="bookingAktif">
             0
           </strong>
 
@@ -235,6 +254,8 @@
 
       </div>
 
+
+      <!-- PENDAPATAN -->
 
       <div class="card">
 
@@ -248,8 +269,7 @@
             Pendapatan
           </span>
 
-          <strong
-            id="totalPendapatan">
+          <strong id="totalPendapatan">
             Rp 0
           </strong>
 
@@ -261,6 +281,8 @@
     </div>
 
 
+    <!-- DASHBOARD PANEL -->
+
     <div class="panel">
 
       <div class="panel-header">
@@ -269,10 +291,14 @@
           Ringkasan
         </h2>
 
+
         <button
+          type="button"
           onclick="loadDashboard()"
           class="btn-secondary">
+
           🔄 Refresh
+
         </button>
 
       </div>
@@ -289,13 +315,17 @@
 
 
 
-  <!-- KAMAR -->
+  <!-- =================================================
+       KAMAR
+       ================================================= -->
 
   <section
     id="kamar"
     class="page">
 
+
     <div class="panel">
+
 
       <div class="panel-header">
 
@@ -303,10 +333,14 @@
           Data Kamar
         </h2>
 
+
         <button
+          type="button"
           onclick="openKamarForm()"
           class="btn-primary">
+
           + Tambah Kamar
+
         </button>
 
       </div>
@@ -321,19 +355,33 @@
             <tr>
 
               <th>ID</th>
+
               <th>Nomor</th>
+
               <th>Lantai</th>
+
               <th>Tipe</th>
+
               <th>Harga</th>
+
               <th>Status</th>
+
               <th>Fasilitas</th>
 
             </tr>
 
           </thead>
 
-          <tbody
-            id="kamarTable">
+
+          <tbody id="kamarTable">
+
+            <tr>
+
+              <td colspan="7">
+                Memuat data...
+              </td>
+
+            </tr>
 
           </tbody>
 
@@ -341,19 +389,24 @@
 
       </div>
 
+
     </div>
 
   </section>
 
 
 
-  <!-- PENGHUNI -->
+  <!-- =================================================
+       PENGHUNI
+       ================================================= -->
 
   <section
     id="penghuni"
     class="page">
 
+
     <div class="panel">
+
 
       <div class="panel-header">
 
@@ -361,10 +414,14 @@
           Data Penghuni
         </h2>
 
+
         <button
+          type="button"
           onclick="openPenghuniForm()"
           class="btn-primary">
+
           + Tambah Penghuni
+
         </button>
 
       </div>
@@ -379,10 +436,15 @@
             <tr>
 
               <th>ID</th>
+
               <th>Nama</th>
+
               <th>No HP</th>
+
               <th>Kamar</th>
+
               <th>Tanggal Masuk</th>
+
               <th>Status</th>
 
             </tr>
@@ -390,8 +452,15 @@
           </thead>
 
 
-          <tbody
-            id="penghuniTable">
+          <tbody id="penghuniTable">
+
+            <tr>
+
+              <td colspan="6">
+                Memuat data...
+              </td>
+
+            </tr>
 
           </tbody>
 
@@ -399,17 +468,21 @@
 
       </div>
 
+
     </div>
 
   </section>
 
 
 
-  <!-- BOOKING -->
+  <!-- =================================================
+       BOOKING
+       ================================================= -->
 
   <section
     id="booking"
     class="page">
+
 
     <div class="empty-page">
 
@@ -417,9 +490,11 @@
         📅
       </div>
 
+
       <h2>
         Booking
       </h2>
+
 
       <p>
         Modul Booking akan kita aktifkan berikutnya.
@@ -431,11 +506,14 @@
 
 
 
-  <!-- KONTRAK -->
+  <!-- =================================================
+       KONTRAK
+       ================================================= -->
 
   <section
     id="kontrak"
     class="page">
+
 
     <div class="empty-page">
 
@@ -443,9 +521,11 @@
         📄
       </div>
 
+
       <h2>
         Kontrak
       </h2>
+
 
       <p>
         Modul Kontrak akan kita aktifkan berikutnya.
@@ -457,26 +537,84 @@
 
 
 
-  <!-- PEMBAYARAN -->
+  <!-- =================================================
+       PEMBAYARAN
+       ================================================= -->
 
   <section
     id="pembayaran"
     class="page">
 
-    <div class="empty-page">
 
-      <div>
-        💰
+    <div class="panel">
+
+
+      <div class="panel-header">
+
+        <h2>
+          Data Pembayaran
+        </h2>
+
+
+        <button
+          type="button"
+          onclick="openPembayaranForm()"
+          class="btn-primary">
+
+          + Tambah Pembayaran
+
+        </button>
+
       </div>
 
-      <h2>
-        Pembayaran
-      </h2>
 
-      <p>
-        Sistem pembayaran dibuat
-        <b>all-in</b>.
-      </p>
+      <div class="table-container">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>ID</th>
+
+              <th>Penghuni</th>
+
+              <th>Kontrak</th>
+
+              <th>Periode</th>
+
+              <th>Tanggal Bayar</th>
+
+              <th>Jumlah</th>
+
+              <th>Metode</th>
+
+              <th>Status</th>
+
+              <th>Keterangan</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody id="pembayaranTable">
+
+            <tr>
+
+              <td colspan="9">
+                Memuat data...
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
 
     </div>
 
@@ -484,11 +622,14 @@
 
 
 
-  <!-- INVOICE -->
+  <!-- =================================================
+       INVOICE
+       ================================================= -->
 
   <section
     id="invoice"
     class="page">
+
 
     <div class="empty-page">
 
@@ -496,9 +637,11 @@
         🧾
       </div>
 
+
       <h2>
         Invoice
       </h2>
+
 
       <p>
         Modul Invoice akan kita aktifkan berikutnya.
@@ -513,13 +656,17 @@
 
 
 
-<!-- MODAL KAMAR -->
+<!-- =================================================
+     MODAL KAMAR
+     ================================================= -->
 
 <div
   id="kamarModal"
   class="modal">
 
+
   <div class="modal-box">
+
 
     <div class="modal-header">
 
@@ -527,15 +674,20 @@
         Tambah Kamar
       </h2>
 
+
       <button
+        type="button"
         onclick="closeModal('kamarModal')">
+
         ✕
+
       </button>
 
     </div>
 
 
     <form
+      id="kamarForm"
       onsubmit="saveKamar(event)">
 
 
@@ -543,7 +695,9 @@
         Nomor Kamar
       </label>
 
+
       <input
+        type="text"
         id="nomorKamar"
         required
         placeholder="Contoh: A-01">
@@ -553,7 +707,9 @@
         Lantai
       </label>
 
+
       <input
+        type="text"
         id="lantai"
         required
         placeholder="Contoh: 1">
@@ -563,7 +719,9 @@
         Tipe Kamar
       </label>
 
+
       <input
+        type="text"
         id="tipe"
         required
         placeholder="Contoh: Standard">
@@ -573,10 +731,12 @@
         Harga / Bulan
       </label>
 
+
       <input
         type="number"
         id="harga"
         required
+        min="0"
         placeholder="1500000">
 
 
@@ -584,11 +744,13 @@
         Status
       </label>
 
+
       <select id="statusKamar">
 
         <option value="KOSONG">
           Kosong
         </option>
+
 
         <option value="TERISI">
           Terisi
@@ -601,6 +763,7 @@
         Fasilitas
       </label>
 
+
       <textarea
         id="fasilitas"
         placeholder="AC, WiFi, kamar mandi...">
@@ -611,19 +774,24 @@
         Catatan
       </label>
 
+
       <textarea
-        id="catatanKamar">
+        id="catatanKamar"
+        placeholder="Catatan kamar...">
       </textarea>
 
 
       <button
         type="submit"
         class="btn-primary full">
+
         Simpan Kamar
+
       </button>
 
 
     </form>
+
 
   </div>
 
@@ -631,13 +799,17 @@
 
 
 
-<!-- MODAL PENGHUNI -->
+<!-- =================================================
+     MODAL PENGHUNI
+     ================================================= -->
 
 <div
   id="penghuniModal"
   class="modal">
 
+
   <div class="modal-box">
+
 
     <div class="modal-header">
 
@@ -645,15 +817,20 @@
         Tambah Penghuni
       </h2>
 
+
       <button
+        type="button"
         onclick="closeModal('penghuniModal')">
+
         ✕
+
       </button>
 
     </div>
 
 
     <form
+      id="penghuniForm"
       onsubmit="savePenghuni(event)">
 
 
@@ -661,42 +838,55 @@
         Nama Lengkap
       </label>
 
+
       <input
+        type="text"
         id="namaPenghuni"
-        required>
+        required
+        placeholder="Nama lengkap">
 
 
       <label>
         NIK
       </label>
 
+
       <input
-        id="nik">
+        type="text"
+        id="nik"
+        placeholder="NIK">
 
 
       <label>
         No HP
       </label>
 
+
       <input
+        type="tel"
         id="noHp"
-        required>
+        required
+        placeholder="08xxxxxxxxxx">
 
 
       <label>
         Email
       </label>
 
+
       <input
         type="email"
-        id="email">
+        id="email"
+        placeholder="email@contoh.com">
 
 
       <label>
         Kamar ID
       </label>
 
+
       <input
+        type="text"
         id="kamarId"
         placeholder="Contoh: KMR-12345678">
 
@@ -704,6 +894,7 @@
       <label>
         Tanggal Masuk
       </label>
+
 
       <input
         type="date"
@@ -715,25 +906,230 @@
         Catatan
       </label>
 
+
       <textarea
-        id="catatanPenghuni">
+        id="catatanPenghuni"
+        placeholder="Catatan penghuni...">
       </textarea>
 
 
       <button
         type="submit"
         class="btn-primary full">
+
         Simpan Penghuni
+
       </button>
 
 
     </form>
+
 
   </div>
 
 </div>
 
 
+
+<!-- =================================================
+     MODAL PEMBAYARAN
+     ================================================= -->
+
+<div
+  id="pembayaranModal"
+  class="modal">
+
+
+  <div class="modal-box">
+
+
+    <div class="modal-header">
+
+      <h2>
+        Tambah Pembayaran
+      </h2>
+
+
+      <button
+        type="button"
+        onclick="closeModal('pembayaranModal')">
+
+        ✕
+
+      </button>
+
+    </div>
+
+
+    <form
+      id="pembayaranForm"
+      onsubmit="savePembayaran(event)">
+
+
+      <label>
+        Penghuni ID
+      </label>
+
+
+      <input
+        type="text"
+        id="penghuniId"
+        placeholder="Contoh: P-12345678">
+
+
+      <label>
+        Kontrak ID
+      </label>
+
+
+      <input
+        type="text"
+        id="kontrakId"
+        placeholder="Contoh: KTR-12345678">
+
+
+      <label>
+        Periode
+      </label>
+
+
+      <input
+        type="month"
+        id="periode">
+
+
+      <label>
+        Tanggal Bayar
+      </label>
+
+
+      <input
+        type="date"
+        id="tanggalBayar">
+
+
+      <label>
+        Jumlah
+      </label>
+
+
+      <input
+        type="number"
+        id="jumlah"
+        min="0"
+        placeholder="1500000">
+
+
+      <label>
+        Metode Pembayaran
+      </label>
+
+
+      <select id="metode">
+
+        <option value="TRANSFER">
+          Transfer
+        </option>
+
+
+        <option value="CASH">
+          Cash
+        </option>
+
+
+        <option value="QRIS">
+          QRIS
+        </option>
+
+
+        <option value="E-WALLET">
+          E-Wallet
+        </option>
+
+      </select>
+
+
+      <label>
+        Status
+      </label>
+
+
+      <select id="statusPembayaran">
+
+        <option value="LUNAS">
+          Lunas
+        </option>
+
+
+        <option value="PENDING">
+          Pending
+        </option>
+
+
+        <option value="BATAL">
+          Batal
+        </option>
+
+      </select>
+
+
+      <label>
+        Keterangan
+      </label>
+
+
+      <textarea
+        id="keterangan"
+        placeholder="Keterangan pembayaran...">
+      </textarea>
+
+
+      <label>
+        Bukti Bayar
+      </label>
+
+
+      <input
+        type="text"
+        id="buktiBayar"
+        placeholder="Link / nomor bukti pembayaran">
+
+
+      <button
+        type="submit"
+        class="btn-primary full">
+
+        Simpan Pembayaran
+
+      </button>
+
+
+    </form>
+
+
+  </div>
+
+</div>
+
+
+
+<!-- =================================================
+     LOADING
+     ================================================= -->
+
+<div
+  id="loading"
+  style="display:none;">
+
+  Memuat data...
+
+</div>
+
+
+
+<!-- =================================================
+     JAVASCRIPT
+     ================================================= -->
 
 <script
   src="app.js">
@@ -743,3 +1139,4 @@
 </body>
 
 </html>
+```
