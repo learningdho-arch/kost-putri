@@ -1,21 +1,9 @@
-```javascript
-/*************************************************
- * KOST PUTRI MANAGEMENT SYSTEM
- * APP.JS
- * GITHUB PAGES -> GOOGLE APPS SCRIPT -> GOOGLE SHEETS
- *************************************************/
-
-
-/* =================================================
-   GOOGLE APPS SCRIPT API
-   ================================================= */
-
 const API_URL =
   'https://script.google.com/macros/s/AKfycbyQKGeA74rDh6jv1aQn2t0wAoIxmA2lhIlVY_ToR6gsX0sBWygwvLGMiXnMIO0OFjJWzw/exec';
 
 
 /* =================================================
-   JSONP REQUEST
+   API GET - JSONP
    ================================================= */
 
 function apiGet(action, params = {}) {
@@ -23,7 +11,7 @@ function apiGet(action, params = {}) {
   return new Promise(function(resolve, reject) {
 
     const callbackName =
-      'kostCallback_' +
+      'callback_' +
       Date.now() +
       '_' +
       Math.floor(Math.random() * 100000);
@@ -31,96 +19,57 @@ function apiGet(action, params = {}) {
     const script =
       document.createElement('script');
 
-    let completed = false;
-
-
-    const timeout =
-      setTimeout(function() {
-
-        if (completed) {
-          return;
-        }
-
-        completed = true;
-
-        removeScript();
-
-        reject(
-          new Error(
-            'Request timeout. API tidak merespons.'
-          )
-        );
-
-      }, 20000);
-
-
-    function removeScript() {
-
-      clearTimeout(timeout);
-
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-
-      try {
-        delete window[callbackName];
-      } catch (error) {
-        window[callbackName] = null;
-      }
-
-    }
-
-
-    window[callbackName] =
-      function(response) {
-
-        if (completed) {
-          return;
-        }
-
-        completed = true;
-
-        removeScript();
-
-        resolve(response);
-
-      };
-
+    let finished = false;
 
     const query =
       new URLSearchParams();
 
-
-    query.set(
+    query.append(
       'action',
       action
     );
 
-
-    query.set(
+    query.append(
       'callback',
       callbackName
     );
 
-
     Object.keys(params).forEach(function(key) {
 
-      const value =
-        params[key];
-
       if (
-        value !== undefined &&
-        value !== null
+        params[key] !== undefined &&
+        params[key] !== null
       ) {
 
-        query.set(
+        query.append(
           key,
-          value
+          params[key]
         );
 
       }
 
     });
+
+    window[callbackName] =
+      function(data) {
+
+        if (finished) {
+          return;
+        }
+
+        finished = true;
+
+        clearTimeout(timeout);
+
+        delete window[callbackName];
+
+        if (script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+
+        resolve(data);
+
+      };
 
 
     script.src =
@@ -128,35 +77,81 @@ function apiGet(action, params = {}) {
       '?' +
       query.toString();
 
-
     script.async = true;
 
 
     script.onerror =
       function() {
 
-        if (completed) {
+        if (finished) {
           return;
         }
 
-        completed = true;
+        finished = true;
 
-        removeScript();
+        clearTimeout(timeout);
+
+        delete window[callbackName];
+
+        if (script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
 
         reject(
           new Error(
-            'Gagal menghubungi Google Apps Script.'
+            'Gagal menghubungkan ke Google Apps Script.'
           )
         );
 
       };
 
 
-    document.head.appendChild(
-      script
-    );
+    document.head.appendChild(script);
+
+
+    const timeout =
+      setTimeout(function() {
+
+        if (finished) {
+          return;
+        }
+
+        finished = true;
+
+        delete window[callbackName];
+
+        if (script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+
+        reject(
+          new Error(
+            'API timeout. Google Apps Script tidak merespons.'
+          )
+        );
+
+      }, 20000);
 
   });
+
+}
+
+
+/* =================================================
+   API POST
+   ================================================= */
+
+async function apiPost(data) {
+
+  const action =
+    data.action || '';
+
+  delete data.action;
+
+  return apiGet(
+    action,
+    data
+  );
 
 }
 
@@ -167,46 +162,15 @@ function apiGet(action, params = {}) {
 
 async function testAPI() {
 
-  try {
+  const result =
+    await apiGet('test');
 
-    const result =
-      await apiGet('test');
+  console.log(
+    'API TEST:',
+    result
+  );
 
-
-    console.log(
-      'API TEST:',
-      result
-    );
-
-
-    if (
-      !result ||
-      result.success !== true
-    ) {
-
-      throw new Error(
-        result &&
-        result.message
-          ? result.message
-          : 'API tidak aktif.'
-      );
-
-    }
-
-
-    return result;
-
-
-  } catch (error) {
-
-    console.error(
-      'TEST API ERROR:',
-      error
-    );
-
-    throw error;
-
-  }
+  return result;
 
 }
 
@@ -224,12 +188,10 @@ async function loadDashboard() {
         'dashboard'
       );
 
-
     console.log(
       'DASHBOARD:',
       result
     );
-
 
     if (
       !result ||
@@ -237,64 +199,53 @@ async function loadDashboard() {
     ) {
 
       throw new Error(
-        result &&
-        result.message
-          ? result.message
-          : 'Gagal mengambil dashboard.'
+        result?.message ||
+        'Gagal mengambil dashboard.'
       );
 
     }
 
-
     const data =
       result.data || {};
 
-
-    setElementText(
+    setText(
       'totalKamar',
       data.totalKamar || 0
     );
 
-
-    setElementText(
+    setText(
       'kamarTerisi',
       data.kamarTerisi || 0
     );
 
-
-    setElementText(
+    setText(
       'kamarKosong',
       data.kamarKosong || 0
     );
 
-
-    setElementText(
+    setText(
       'totalPenghuni',
       data.totalPenghuni || 0
     );
 
-
-    setElementText(
+    setText(
       'bookingAktif',
       data.bookingAktif || 0
     );
 
-
-    setElementText(
+    setText(
       'totalPendapatan',
       formatRupiah(
         data.totalPendapatan || 0
       )
     );
 
-
     return result;
-
 
   } catch (error) {
 
     console.error(
-      'DASHBOARD ERROR:',
+      'Dashboard error:',
       error
     );
 
@@ -316,12 +267,10 @@ async function loadKamar() {
       'kamar'
     );
 
-
   console.log(
     'KAMAR:',
     result
   );
-
 
   if (
     !result ||
@@ -329,19 +278,15 @@ async function loadKamar() {
   ) {
 
     throw new Error(
-      result &&
-      result.message
-        ? result.message
-        : 'Gagal mengambil data kamar.'
+      result?.message ||
+      'Gagal mengambil data kamar.'
     );
 
   }
 
-
   renderKamar(
     result.data || []
   );
-
 
   return result;
 
@@ -359,12 +304,10 @@ async function loadPenghuni() {
       'penghuni'
     );
 
-
   console.log(
     'PENGHUNI:',
     result
   );
-
 
   if (
     !result ||
@@ -372,19 +315,15 @@ async function loadPenghuni() {
   ) {
 
     throw new Error(
-      result &&
-      result.message
-        ? result.message
-        : 'Gagal mengambil data penghuni.'
+      result?.message ||
+      'Gagal mengambil data penghuni.'
     );
 
   }
 
-
   renderPenghuni(
     result.data || []
   );
-
 
   return result;
 
@@ -402,12 +341,10 @@ async function loadPembayaran() {
       'pembayaran'
     );
 
-
   console.log(
     'PEMBAYARAN:',
     result
   );
-
 
   if (
     !result ||
@@ -415,19 +352,15 @@ async function loadPembayaran() {
   ) {
 
     throw new Error(
-      result &&
-      result.message
-        ? result.message
-        : 'Gagal mengambil data pembayaran.'
+      result?.message ||
+      'Gagal mengambil data pembayaran.'
     );
 
   }
 
-
   renderPembayaran(
     result.data || []
   );
-
 
   return result;
 
@@ -435,23 +368,39 @@ async function loadPembayaran() {
 
 
 /* =================================================
-   TAMBAH KAMAR
+   SAVE KAMAR
    ================================================= */
 
-async function addKamar(data) {
+async function saveKamar(event) {
 
-  if (
-    !data ||
-    !data.nomorKamar
-  ) {
-
-    alert(
-      'Nomor kamar wajib diisi.'
-    );
-
-    return;
-
+  if (event) {
+    event.preventDefault();
   }
+
+  const data = {
+
+    nomorKamar:
+      getValue('nomorKamar'),
+
+    lantai:
+      getValue('lantai'),
+
+    tipe:
+      getValue('tipe'),
+
+    harga:
+      getValue('harga'),
+
+    status:
+      getValue('status') || 'KOSONG',
+
+    fasilitas:
+      getValue('fasilitas'),
+
+    catatan:
+      getValue('catatan')
+
+  };
 
 
   try {
@@ -462,12 +411,10 @@ async function addKamar(data) {
         data
       );
 
-
     console.log(
-      'ADD KAMAR:',
+      'SAVE KAMAR:',
       result
     );
-
 
     if (
       !result ||
@@ -475,36 +422,30 @@ async function addKamar(data) {
     ) {
 
       throw new Error(
-        result &&
-        result.message
-          ? result.message
-          : 'Gagal menyimpan kamar.'
+        result?.message ||
+        'Gagal menyimpan kamar.'
       );
 
     }
 
-
     alert(
       result.message ||
-      'Kamar berhasil ditambahkan.'
+      'Kamar berhasil disimpan.'
     );
 
+    resetForm(
+      'kamarForm'
+    );
 
     await loadKamar();
 
     await loadDashboard();
 
-
-    return result;
-
-
   } catch (error) {
 
     console.error(
-      'ADD KAMAR ERROR:',
       error
     );
-
 
     alert(
       'Gagal menyimpan kamar: ' +
@@ -517,23 +458,46 @@ async function addKamar(data) {
 
 
 /* =================================================
-   TAMBAH PENGHUNI
+   SAVE PENGHUNI
    ================================================= */
 
-async function addPenghuni(data) {
+async function savePenghuni(event) {
 
-  if (
-    !data ||
-    !data.nama
-  ) {
-
-    alert(
-      'Nama penghuni wajib diisi.'
-    );
-
-    return;
-
+  if (event) {
+    event.preventDefault();
   }
+
+  const data = {
+
+    nama:
+      getValue('nama'),
+
+    nik:
+      getValue('nik'),
+
+    noHp:
+      getValue('noHp'),
+
+    email:
+      getValue('email'),
+
+    kamarId:
+      getValue('kamarId'),
+
+    tanggalMasuk:
+      getValue('tanggalMasuk'),
+
+    tanggalKeluar:
+      getValue('tanggalKeluar'),
+
+    status:
+      getValue('statusPenghuni') ||
+      'AKTIF',
+
+    catatan:
+      getValue('catatanPenghuni')
+
+  };
 
 
   try {
@@ -544,12 +508,10 @@ async function addPenghuni(data) {
         data
       );
 
-
     console.log(
-      'ADD PENGHUNI:',
+      'SAVE PENGHUNI:',
       result
     );
-
 
     if (
       !result ||
@@ -557,36 +519,30 @@ async function addPenghuni(data) {
     ) {
 
       throw new Error(
-        result &&
-        result.message
-          ? result.message
-          : 'Gagal menyimpan penghuni.'
+        result?.message ||
+        'Gagal menyimpan penghuni.'
       );
 
     }
 
-
     alert(
       result.message ||
-      'Penghuni berhasil ditambahkan.'
+      'Penghuni berhasil disimpan.'
     );
 
+    resetForm(
+      'penghuniForm'
+    );
 
     await loadPenghuni();
 
     await loadDashboard();
 
-
-    return result;
-
-
   } catch (error) {
 
     console.error(
-      'ADD PENGHUNI ERROR:',
       error
     );
-
 
     alert(
       'Gagal menyimpan penghuni: ' +
@@ -599,10 +555,47 @@ async function addPenghuni(data) {
 
 
 /* =================================================
-   TAMBAH PEMBAYARAN
+   SAVE PEMBAYARAN
    ================================================= */
 
-async function addPembayaran(data) {
+async function savePembayaran(event) {
+
+  if (event) {
+    event.preventDefault();
+  }
+
+  const data = {
+
+    penghuniId:
+      getValue('penghuniId'),
+
+    kontrakId:
+      getValue('kontrakId'),
+
+    periode:
+      getValue('periode'),
+
+    tanggalBayar:
+      getValue('tanggalBayar'),
+
+    jumlah:
+      getValue('jumlah'),
+
+    metode:
+      getValue('metode'),
+
+    status:
+      getValue('statusPembayaran') ||
+      'LUNAS',
+
+    keterangan:
+      getValue('keterangan'),
+
+    buktiBayar:
+      getValue('buktiBayar')
+
+  };
+
 
   try {
 
@@ -612,12 +605,10 @@ async function addPembayaran(data) {
         data
       );
 
-
     console.log(
-      'ADD PEMBAYARAN:',
+      'SAVE PEMBAYARAN:',
       result
     );
-
 
     if (
       !result ||
@@ -625,41 +616,161 @@ async function addPembayaran(data) {
     ) {
 
       throw new Error(
-        result &&
-        result.message
-          ? result.message
-          : 'Gagal menyimpan pembayaran.'
+        result?.message ||
+        'Gagal menyimpan pembayaran.'
       );
 
     }
-
 
     alert(
       result.message ||
       'Pembayaran berhasil disimpan.'
     );
 
+    resetForm(
+      'pembayaranForm'
+    );
 
     await loadPembayaran();
 
     await loadDashboard();
 
-
-    return result;
-
-
   } catch (error) {
 
     console.error(
-      'ADD PEMBAYARAN ERROR:',
       error
     );
-
 
     alert(
       'Gagal menyimpan pembayaran: ' +
       error.message
     );
+
+  }
+
+}
+
+
+/* =================================================
+   SHOW PAGE
+   ================================================= */
+
+function showPage(pageName) {
+
+  const pages =
+    document.querySelectorAll(
+      '.page'
+    );
+
+  pages.forEach(function(page) {
+
+    page.style.display =
+      'none';
+
+  });
+
+
+  const target =
+    document.getElementById(
+      pageName
+    );
+
+
+  if (target) {
+
+    target.style.display =
+      'block';
+
+  }
+
+
+  if (
+    pageName === 'dashboard'
+  ) {
+
+    loadDashboard();
+
+  }
+
+
+  if (
+    pageName === 'kamar'
+  ) {
+
+    loadKamar();
+
+  }
+
+
+  if (
+    pageName === 'penghuni'
+  ) {
+
+    loadPenghuni();
+
+  }
+
+
+  if (
+    pageName === 'pembayaran'
+  ) {
+
+    loadPembayaran();
+
+  }
+
+}
+
+
+/* =================================================
+   OPEN FORM
+   ================================================= */
+
+function openKamarForm() {
+
+  const form =
+    document.getElementById(
+      'kamarForm'
+    );
+
+  if (form) {
+
+    form.style.display =
+      'block';
+
+  }
+
+}
+
+
+function openPenghuniForm() {
+
+  const form =
+    document.getElementById(
+      'penghuniForm'
+    );
+
+  if (form) {
+
+    form.style.display =
+      'block';
+
+  }
+
+}
+
+
+function openPembayaranForm() {
+
+  const form =
+    document.getElementById(
+      'pembayaranForm'
+    );
+
+  if (form) {
+
+    form.style.display =
+      'block';
 
   }
 
@@ -677,30 +788,23 @@ function renderKamar(data) {
       'kamarTable'
     );
 
-
   if (!table) {
     return;
   }
-
 
   const tbody =
     table.querySelector(
       'tbody'
     );
 
-
   if (!tbody) {
     return;
   }
 
-
   tbody.innerHTML = '';
 
 
-  if (
-    !data ||
-    data.length === 0
-  ) {
+  if (!data.length) {
 
     tbody.innerHTML =
       '<tr>' +
@@ -723,6 +827,7 @@ function renderKamar(data) {
 
 
     tr.innerHTML =
+
       '<td>' +
       escapeHTML(row.KAMAR_ID) +
       '</td>' +
@@ -755,10 +860,7 @@ function renderKamar(data) {
       escapeHTML(row.CATATAN) +
       '</td>';
 
-
-    tbody.appendChild(
-      tr
-    );
+    tbody.appendChild(tr);
 
   });
 
@@ -776,30 +878,23 @@ function renderPenghuni(data) {
       'penghuniTable'
     );
 
-
   if (!table) {
     return;
   }
-
 
   const tbody =
     table.querySelector(
       'tbody'
     );
 
-
   if (!tbody) {
     return;
   }
 
-
   tbody.innerHTML = '';
 
 
-  if (
-    !data ||
-    data.length === 0
-  ) {
+  if (!data.length) {
 
     tbody.innerHTML =
       '<tr>' +
@@ -822,6 +917,7 @@ function renderPenghuni(data) {
 
 
     tr.innerHTML =
+
       '<td>' +
       escapeHTML(row.PENGHUNI_ID) +
       '</td>' +
@@ -862,10 +958,7 @@ function renderPenghuni(data) {
       escapeHTML(row.CATATAN) +
       '</td>';
 
-
-    tbody.appendChild(
-      tr
-    );
+    tbody.appendChild(tr);
 
   });
 
@@ -883,30 +976,23 @@ function renderPembayaran(data) {
       'pembayaranTable'
     );
 
-
   if (!table) {
     return;
   }
-
 
   const tbody =
     table.querySelector(
       'tbody'
     );
 
-
   if (!tbody) {
     return;
   }
 
-
   tbody.innerHTML = '';
 
 
-  if (
-    !data ||
-    data.length === 0
-  ) {
+  if (!data.length) {
 
     tbody.innerHTML =
       '<tr>' +
@@ -929,6 +1015,7 @@ function renderPembayaran(data) {
 
 
     tr.innerHTML =
+
       '<td>' +
       escapeHTML(row.PEMBAYARAN_ID) +
       '</td>' +
@@ -965,10 +1052,7 @@ function renderPembayaran(data) {
       escapeHTML(row.KETERANGAN) +
       '</td>';
 
-
-    tbody.appendChild(
-      tr
-    );
+    tbody.appendChild(tr);
 
   });
 
@@ -976,14 +1060,53 @@ function renderPembayaran(data) {
 
 
 /* =================================================
-   FORMAT RUPIAH
+   UTILITIES
    ================================================= */
 
+function getValue(id) {
+
+  const element =
+    document.getElementById(id);
+
+  if (!element) {
+    return '';
+  }
+
+  return element.value || '';
+
+}
+
+
+function setText(id, value) {
+
+  const element =
+    document.getElementById(id);
+
+  if (element) {
+
+    element.textContent =
+      value;
+
+  }
+
+}
+
+
+function resetForm(id) {
+
+  const form =
+    document.getElementById(id);
+
+  if (form) {
+
+    form.reset();
+
+  }
+
+}
+
+
 function formatRupiah(value) {
-
-  const number =
-    Number(value) || 0;
-
 
   return new Intl.NumberFormat(
     'id-ID',
@@ -992,14 +1115,12 @@ function formatRupiah(value) {
       currency: 'IDR',
       maximumFractionDigits: 0
     }
-  ).format(number);
+  ).format(
+    Number(value) || 0
+  );
 
 }
 
-
-/* =================================================
-   FORMAT DATE
-   ================================================= */
 
 function formatDate(value) {
 
@@ -1007,10 +1128,8 @@ function formatDate(value) {
     return '-';
   }
 
-
   const date =
     new Date(value);
-
 
   if (
     isNaN(
@@ -1019,11 +1138,10 @@ function formatDate(value) {
   ) {
 
     return escapeHTML(
-      String(value)
+      value
     );
 
   }
-
 
   return date.toLocaleDateString(
     'id-ID',
@@ -1037,10 +1155,6 @@ function formatDate(value) {
 }
 
 
-/* =================================================
-   ESCAPE HTML
-   ================================================= */
-
 function escapeHTML(value) {
 
   if (
@@ -1051,7 +1165,6 @@ function escapeHTML(value) {
     return '';
 
   }
-
 
   return String(value)
 
@@ -1084,56 +1197,32 @@ function escapeHTML(value) {
 
 
 /* =================================================
-   SET TEXT
-   ================================================= */
-
-function setElementText(
-  id,
-  value
-) {
-
-  const element =
-    document.getElementById(
-      id
-    );
-
-
-  if (element) {
-
-    element.textContent =
-      value;
-
-  }
-
-}
-
-
-/* =================================================
-   INIT
+   INITIALIZATION
    ================================================= */
 
 async function initApp() {
 
   console.log(
-    '================================='
-  );
-
-  console.log(
-    'KOST PUTRI MANAGEMENT SYSTEM'
-  );
-
-  console.log(
-    'APP START'
-  );
-
-  console.log(
-    '================================='
+    'KOST PUTRI APP START'
   );
 
 
   try {
 
-    await testAPI();
+    const test =
+      await testAPI();
+
+    if (
+      !test ||
+      test.success !== true
+    ) {
+
+      throw new Error(
+        test?.message ||
+        'API tidak aktif.'
+      );
+
+    }
 
 
     console.log(
@@ -1151,7 +1240,7 @@ async function initApp() {
 
 
     console.log(
-      'SEMUA DATA BERHASIL DIMUAT'
+      'DATA BERHASIL DIMUAT'
     );
 
 
@@ -1163,10 +1252,18 @@ async function initApp() {
     );
 
 
-    alert(
-      'Gagal memuat data: ' +
-      error.message
-    );
+    const loading =
+      document.getElementById(
+        'loading'
+      );
+
+    if (loading) {
+
+      loading.textContent =
+        'Gagal memuat data: ' +
+        error.message;
+
+    }
 
   }
 
@@ -1174,32 +1271,28 @@ async function initApp() {
 
 
 /* =================================================
-   START APP
+   START
    ================================================= */
 
-if (
-  document.readyState ===
-  'loading'
-) {
+document.addEventListener(
+  'DOMContentLoaded',
+  function() {
 
-  document.addEventListener(
-    'DOMContentLoaded',
-    initApp
-  );
+    initApp();
 
-} else {
-
-  initApp();
-
-}
+  }
+);
 
 
 /* =================================================
-   GLOBAL FUNCTIONS
+   GLOBAL
    ================================================= */
 
 window.apiGet =
   apiGet;
+
+window.apiPost =
+  apiPost;
 
 window.testAPI =
   testAPI;
@@ -1216,12 +1309,23 @@ window.loadPenghuni =
 window.loadPembayaran =
   loadPembayaran;
 
-window.addKamar =
-  addKamar;
+window.saveKamar =
+  saveKamar;
 
-window.addPenghuni =
-  addPenghuni;
+window.savePenghuni =
+  savePenghuni;
 
-window.addPembayaran =
-  addPembayaran;
-```
+window.savePembayaran =
+  savePembayaran;
+
+window.showPage =
+  showPage;
+
+window.openKamarForm =
+  openKamarForm;
+
+window.openPenghuniForm =
+  openPenghuniForm;
+
+window.openPembayaranForm =
+  openPembayaranForm;
