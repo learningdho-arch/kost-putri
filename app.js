@@ -1,225 +1,81 @@
 ```javascript
 /*************************************************
  * KOST PUTRI MANAGEMENT SYSTEM
- * GITHUB PAGES → APPS SCRIPT → GOOGLE SHEETS
+ * APP.JS - FINAL REVISION
+ * GitHub Pages → Google Apps Script → Google Sheets
  *************************************************/
 
 
 /* =================================================
-   API
+   CONFIG
    ================================================= */
 
 const API_URL =
-  'https://script.google.com/macros/s/AKfycbyQKGeA74rDh6jv1aQn2t0wAoIxmA2lhIlVY_ToR6gsX0BsWygwvLGMiXnMIO0OFjJWzw/exec';
+  'https://script.google.com/macros/s/AKfycbyQKGeA74rDh6jv1aQn2t0wAoIxmA2lhIlVY_ToR6gsX0sBWygwvLGMiXnMIO0OFjJWzw/exec';
 
 
 /* =================================================
-   LOGIN
+   LOGIN CONFIG
    ================================================= */
 
-const LOGIN_USERNAME = 'admin';
-const LOGIN_PASSWORD = 'admin123';
-
-
-function isLoggedIn() {
-
-  return (
-    sessionStorage.getItem('kostLogin') === 'true'
-  );
-
-}
-
-
-function checkLogin() {
-
-  const loginPage =
-    document.getElementById('loginPage');
-
-  const appContainer =
-    document.getElementById('appContainer');
-
-
-  if (isLoggedIn()) {
-
-    if (loginPage) {
-      loginPage.style.display = 'none';
-    }
-
-    if (appContainer) {
-      appContainer.style.display = 'flex';
-    }
-
-  } else {
-
-    if (loginPage) {
-      loginPage.style.display = 'flex';
-    }
-
-    if (appContainer) {
-      appContainer.style.display = 'none';
-    }
-
-  }
-
-}
-
-
-function loginUser(event) {
-
-  if (event) {
-    event.preventDefault();
-  }
-
-
-  const usernameElement =
-    document.getElementById('loginUsername');
-
-  const passwordElement =
-    document.getElementById('loginPassword');
-
-  const message =
-    document.getElementById('loginMessage');
-
-
-  const username =
-    usernameElement
-      ? usernameElement.value.trim()
-      : '';
-
-
-  const password =
-    passwordElement
-      ? passwordElement.value
-      : '';
-
-
-  if (
-    username === LOGIN_USERNAME &&
-    password === LOGIN_PASSWORD
-  ) {
-
-    sessionStorage.setItem(
-      'kostLogin',
-      'true'
-    );
-
-
-    if (message) {
-      message.textContent = '';
-    }
-
-
-    if (passwordElement) {
-      passwordElement.value = '';
-    }
-
-
-    checkLogin();
-
-
-    initApp();
-
-
-  } else {
-
-    if (message) {
-
-      message.textContent =
-        'Username atau password salah.';
-
-      message.style.color =
-        '#dc2626';
-
-    }
-
-
-    if (passwordElement) {
-      passwordElement.value = '';
-    }
-
-  }
-
-}
-
-
-function logoutUser() {
-
-  const confirmLogout =
-    confirm(
-      'Apakah kamu yakin ingin logout?'
-    );
-
-
-  if (!confirmLogout) {
-    return;
-  }
-
-
-  sessionStorage.removeItem(
-    'kostLogin'
-  );
-
-
-  location.reload();
-
-}
+const LOGIN_KEY = 'kostLogin';
+const USER_KEY = 'kostUser';
 
 
 /* =================================================
    API GET - JSONP
    ================================================= */
 
-function apiGet(action, params = {}) {
+function apiGet(action, params) {
+
+  params = params || {};
 
   return new Promise(function(resolve, reject) {
 
     const callbackName =
-      'callback_' +
+      'kostCallback_' +
       Date.now() +
       '_' +
       Math.floor(Math.random() * 100000);
 
-
     const script =
       document.createElement('script');
 
-
     let finished = false;
-
-    let timeout;
-
 
     const query =
       new URLSearchParams();
-
 
     query.append(
       'action',
       action
     );
 
-
     query.append(
       'callback',
       callbackName
     );
 
-
     Object.keys(params).forEach(function(key) {
 
+      const value = params[key];
+
       if (
-        params[key] !== undefined &&
-        params[key] !== null
+        value !== undefined &&
+        value !== null
       ) {
 
         query.append(
           key,
-          params[key]
+          value
         );
 
       }
 
     });
+
+
+    let timeout;
 
 
     window[callbackName] =
@@ -229,24 +85,15 @@ function apiGet(action, params = {}) {
           return;
         }
 
-
         finished = true;
-
 
         clearTimeout(timeout);
 
-
         delete window[callbackName];
 
-
         if (script.parentNode) {
-
-          script.parentNode.removeChild(
-            script
-          );
-
+          script.parentNode.removeChild(script);
         }
-
 
         resolve(data);
 
@@ -258,7 +105,6 @@ function apiGet(action, params = {}) {
       '?' +
       query.toString();
 
-
     script.async = true;
 
 
@@ -269,24 +115,15 @@ function apiGet(action, params = {}) {
           return;
         }
 
-
         finished = true;
-
 
         clearTimeout(timeout);
 
-
         delete window[callbackName];
 
-
         if (script.parentNode) {
-
-          script.parentNode.removeChild(
-            script
-          );
-
+          script.parentNode.removeChild(script);
         }
-
 
         reject(
           new Error(
@@ -297,9 +134,7 @@ function apiGet(action, params = {}) {
       };
 
 
-    document.head.appendChild(
-      script
-    );
+    document.head.appendChild(script);
 
 
     timeout =
@@ -309,28 +144,19 @@ function apiGet(action, params = {}) {
           return;
         }
 
-
         finished = true;
-
 
         delete window[callbackName];
 
-
         if (script.parentNode) {
-
-          script.parentNode.removeChild(
-            script
-          );
-
+          script.parentNode.removeChild(script);
         }
-
 
         reject(
           new Error(
             'API timeout. Google Apps Script tidak merespons.'
           )
         );
-
 
       }, 20000);
 
@@ -345,16 +171,15 @@ function apiGet(action, params = {}) {
 
 async function apiPost(data) {
 
+  data = data || {};
+
   const payload =
     Object.assign({}, data);
-
 
   const action =
     payload.action || '';
 
-
   delete payload.action;
-
 
   return apiGet(
     action,
@@ -373,14 +198,228 @@ async function testAPI() {
   const result =
     await apiGet('test');
 
-
   console.log(
     'API TEST:',
     result
   );
 
-
   return result;
+
+}
+
+
+/* =================================================
+   LOGIN
+   ================================================= */
+
+function isLoggedIn() {
+
+  return (
+    localStorage.getItem(LOGIN_KEY) === 'true'
+  );
+
+}
+
+
+function getCurrentUser() {
+
+  return localStorage.getItem(USER_KEY) || '';
+
+}
+
+
+function showLoginPage() {
+
+  const loginPage =
+    document.getElementById('loginPage');
+
+  const appContainer =
+    document.getElementById('appContainer');
+
+
+  if (loginPage) {
+
+    loginPage.style.display =
+      'flex';
+
+  }
+
+
+  if (appContainer) {
+
+    appContainer.style.display =
+      'none';
+
+  }
+
+}
+
+
+function showAppPage() {
+
+  const loginPage =
+    document.getElementById('loginPage');
+
+  const appContainer =
+    document.getElementById('appContainer');
+
+
+  if (loginPage) {
+
+    loginPage.style.display =
+      'none';
+
+  }
+
+
+  if (appContainer) {
+
+    appContainer.style.display =
+      'flex';
+
+  }
+
+}
+
+
+function loginUser(event) {
+
+  if (event) {
+    event.preventDefault();
+  }
+
+
+  const username =
+    getValue('loginUsername').trim();
+
+  const password =
+    getValue('loginPassword');
+
+
+  const errorElement =
+    document.getElementById('loginError');
+
+
+  /*
+   * LOGIN SEMENTARA / LOCAL
+   *
+   * Username:
+   * admin
+   *
+   * Password:
+   * admin123
+   */
+
+  if (
+    username === 'admin' &&
+    password === 'admin123'
+  ) {
+
+    localStorage.setItem(
+      LOGIN_KEY,
+      'true'
+    );
+
+    localStorage.setItem(
+      USER_KEY,
+      username
+    );
+
+
+    if (errorElement) {
+
+      errorElement.textContent =
+        '';
+
+    }
+
+
+    showAppPage();
+
+    updateUserDisplay();
+
+    initDashboardAfterLogin();
+
+    return;
+
+  }
+
+
+  if (errorElement) {
+
+    errorElement.textContent =
+      'Username atau password salah.';
+
+  }
+
+}
+
+
+function logoutUser() {
+
+  localStorage.removeItem(
+    LOGIN_KEY
+  );
+
+  localStorage.removeItem(
+    USER_KEY
+  );
+
+
+  showLoginPage();
+
+
+  const password =
+    document.getElementById(
+      'loginPassword'
+    );
+
+  if (password) {
+
+    password.value =
+      '';
+
+  }
+
+}
+
+
+/* =================================================
+   USER DISPLAY
+   ================================================= */
+
+function updateUserDisplay() {
+
+  const username =
+    getCurrentUser();
+
+
+  const elements =
+    document.querySelectorAll(
+      '[data-user]'
+    );
+
+
+  elements.forEach(function(element) {
+
+    element.textContent =
+      username || 'Admin';
+
+  });
+
+
+  const userText =
+    document.getElementById(
+      'currentUser'
+    );
+
+
+  if (userText) {
+
+    userText.textContent =
+      username || 'Admin';
+
+  }
 
 }
 
@@ -411,8 +450,10 @@ async function loadDashboard() {
     ) {
 
       throw new Error(
-        result?.message ||
-        'Gagal mengambil dashboard.'
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal mengambil dashboard.'
       );
 
     }
@@ -462,15 +503,14 @@ async function loadDashboard() {
 
     setText(
       'dashboardMessage',
-      'Data dashboard berhasil dimuat.'
+      'Data dashboard berhasil diperbarui.'
     );
 
 
-    setAPIStatus(true);
+    setApiStatus(true);
 
 
     return result;
-
 
   } catch (error) {
 
@@ -480,7 +520,14 @@ async function loadDashboard() {
     );
 
 
-    setAPIStatus(false);
+    setApiStatus(false);
+
+
+    setText(
+      'dashboardMessage',
+      'Gagal memuat dashboard: ' +
+      error.message
+    );
 
 
     throw error;
@@ -496,37 +543,52 @@ async function loadDashboard() {
 
 async function loadKamar() {
 
-  const result =
-    await apiGet(
-      'kamar'
+  try {
+
+    const result =
+      await apiGet(
+        'kamar'
+      );
+
+
+    console.log(
+      'KAMAR:',
+      result
     );
 
 
-  console.log(
-    'KAMAR:',
-    result
-  );
+    if (
+      !result ||
+      result.success !== true
+    ) {
+
+      throw new Error(
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal mengambil data kamar.'
+      );
+
+    }
 
 
-  if (
-    !result ||
-    result.success !== true
-  ) {
-
-    throw new Error(
-      result?.message ||
-      'Gagal mengambil data kamar.'
+    renderKamar(
+      result.data || []
     );
+
+
+    return result;
+
+  } catch (error) {
+
+    console.error(
+      'Kamar error:',
+      error
+    );
+
+    throw error;
 
   }
-
-
-  renderKamar(
-    result.data || []
-  );
-
-
-  return result;
 
 }
 
@@ -537,37 +599,52 @@ async function loadKamar() {
 
 async function loadPenghuni() {
 
-  const result =
-    await apiGet(
-      'penghuni'
+  try {
+
+    const result =
+      await apiGet(
+        'penghuni'
+      );
+
+
+    console.log(
+      'PENGHUNI:',
+      result
     );
 
 
-  console.log(
-    'PENGHUNI:',
-    result
-  );
+    if (
+      !result ||
+      result.success !== true
+    ) {
+
+      throw new Error(
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal mengambil data penghuni.'
+      );
+
+    }
 
 
-  if (
-    !result ||
-    result.success !== true
-  ) {
-
-    throw new Error(
-      result?.message ||
-      'Gagal mengambil data penghuni.'
+    renderPenghuni(
+      result.data || []
     );
+
+
+    return result;
+
+  } catch (error) {
+
+    console.error(
+      'Penghuni error:',
+      error
+    );
+
+    throw error;
 
   }
-
-
-  renderPenghuni(
-    result.data || []
-  );
-
-
-  return result;
 
 }
 
@@ -598,8 +675,10 @@ async function loadPembayaran() {
     ) {
 
       throw new Error(
-        result?.message ||
-        'Gagal mengambil data pembayaran.'
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal mengambil data pembayaran.'
       );
 
     }
@@ -612,14 +691,12 @@ async function loadPembayaran() {
 
     return result;
 
-
   } catch (error) {
 
     console.error(
-      'Load pembayaran error:',
+      'Pembayaran error:',
       error
     );
-
 
     throw error;
 
@@ -666,12 +743,6 @@ async function saveKamar(event) {
   };
 
 
-  console.log(
-    'DATA KAMAR:',
-    data
-  );
-
-
   try {
 
     const result =
@@ -693,8 +764,10 @@ async function saveKamar(event) {
     ) {
 
       throw new Error(
-        result?.message ||
-        'Gagal menyimpan kamar.'
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal menyimpan kamar.'
       );
 
     }
@@ -706,13 +779,13 @@ async function saveKamar(event) {
     );
 
 
-    resetForm(
-      'kamarForm'
+    closeModal(
+      'kamarModal'
     );
 
 
-    closeModal(
-      'kamarModal'
+    resetForm(
+      'kamarForm'
     );
 
 
@@ -720,11 +793,10 @@ async function saveKamar(event) {
 
     await loadDashboard();
 
-
   } catch (error) {
 
     console.error(
-      'SAVE KAMAR ERROR:',
+      'Save kamar error:',
       error
     );
 
@@ -771,21 +843,16 @@ async function savePenghuni(event) {
       getValue('tanggalMasuk'),
 
     tanggalKeluar:
-      '',
+      getValue('tanggalKeluar'),
 
     status:
+      getValue('statusPenghuni') ||
       'AKTIF',
 
     catatan:
       getValue('catatanPenghuni')
 
   };
-
-
-  console.log(
-    'DATA PENGHUNI:',
-    data
-  );
 
 
   try {
@@ -809,8 +876,10 @@ async function savePenghuni(event) {
     ) {
 
       throw new Error(
-        result?.message ||
-        'Gagal menyimpan penghuni.'
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal menyimpan penghuni.'
       );
 
     }
@@ -822,13 +891,13 @@ async function savePenghuni(event) {
     );
 
 
-    resetForm(
-      'penghuniForm'
+    closeModal(
+      'penghuniModal'
     );
 
 
-    closeModal(
-      'penghuniModal'
+    resetForm(
+      'penghuniForm'
     );
 
 
@@ -836,11 +905,10 @@ async function savePenghuni(event) {
 
     await loadDashboard();
 
-
   } catch (error) {
 
     console.error(
-      'SAVE PENGHUNI ERROR:',
+      'Save penghuni error:',
       error
     );
 
@@ -920,8 +988,10 @@ async function savePembayaran(event) {
     ) {
 
       throw new Error(
-        result?.message ||
-        'Gagal menyimpan pembayaran.'
+        result &&
+        result.message
+          ? result.message
+          : 'Gagal menyimpan pembayaran.'
       );
 
     }
@@ -933,13 +1003,13 @@ async function savePembayaran(event) {
     );
 
 
-    resetForm(
-      'pembayaranForm'
+    closeModal(
+      'pembayaranModal'
     );
 
 
-    closeModal(
-      'pembayaranModal'
+    resetForm(
+      'pembayaranForm'
     );
 
 
@@ -947,11 +1017,10 @@ async function savePembayaran(event) {
 
     await loadDashboard();
 
-
   } catch (error) {
 
     console.error(
-      'SAVE PEMBAYARAN ERROR:',
+      'Save pembayaran error:',
       error
     );
 
@@ -1008,6 +1077,12 @@ function showPage(pageName) {
   }
 
 
+  const pageTitle =
+    document.getElementById(
+      'pageTitle'
+    );
+
+
   const titles = {
 
     dashboard:
@@ -1034,11 +1109,13 @@ function showPage(pageName) {
   };
 
 
-  setText(
-    'pageTitle',
-    titles[pageName] ||
-    'Kost Putri Management'
-  );
+  if (pageTitle) {
+
+    pageTitle.textContent =
+      titles[pageName] ||
+      'Kost Putri';
+
+  }
 
 
   if (pageName === 'dashboard') {
@@ -1147,10 +1224,33 @@ function closeModal(id) {
 
 function renderKamar(data) {
 
-  const tbody =
+  const table =
     document.getElementById(
       'kamarTable'
     );
+
+
+  if (!table) {
+    return;
+  }
+
+
+  let tbody;
+
+
+  if (
+    table.tagName &&
+    table.tagName.toLowerCase() === 'tbody'
+  ) {
+
+    tbody = table;
+
+  } else {
+
+    tbody =
+      table.querySelector('tbody');
+
+  }
 
 
   if (!tbody) {
@@ -1158,8 +1258,7 @@ function renderKamar(data) {
   }
 
 
-  tbody.innerHTML =
-    '';
+  tbody.innerHTML = '';
 
 
   if (
@@ -1169,7 +1268,7 @@ function renderKamar(data) {
 
     tbody.innerHTML =
       '<tr>' +
-      '<td colspan="7">' +
+      '<td colspan="20">' +
       'Belum ada data kamar.' +
       '</td>' +
       '</tr>';
@@ -1182,9 +1281,7 @@ function renderKamar(data) {
   data.forEach(function(row) {
 
     const tr =
-      document.createElement(
-        'tr'
-      );
+      document.createElement('tr');
 
 
     tr.innerHTML =
@@ -1218,9 +1315,7 @@ function renderKamar(data) {
       '</td>';
 
 
-    tbody.appendChild(
-      tr
-    );
+    tbody.appendChild(tr);
 
   });
 
@@ -1233,10 +1328,33 @@ function renderKamar(data) {
 
 function renderPenghuni(data) {
 
-  const tbody =
+  const table =
     document.getElementById(
       'penghuniTable'
     );
+
+
+  if (!table) {
+    return;
+  }
+
+
+  let tbody;
+
+
+  if (
+    table.tagName &&
+    table.tagName.toLowerCase() === 'tbody'
+  ) {
+
+    tbody = table;
+
+  } else {
+
+    tbody =
+      table.querySelector('tbody');
+
+  }
 
 
   if (!tbody) {
@@ -1244,8 +1362,7 @@ function renderPenghuni(data) {
   }
 
 
-  tbody.innerHTML =
-    '';
+  tbody.innerHTML = '';
 
 
   if (
@@ -1255,7 +1372,7 @@ function renderPenghuni(data) {
 
     tbody.innerHTML =
       '<tr>' +
-      '<td colspan="6">' +
+      '<td colspan="20">' +
       'Belum ada data penghuni.' +
       '</td>' +
       '</tr>';
@@ -1268,9 +1385,7 @@ function renderPenghuni(data) {
   data.forEach(function(row) {
 
     const tr =
-      document.createElement(
-        'tr'
-      );
+      document.createElement('tr');
 
 
     tr.innerHTML =
@@ -1284,7 +1399,15 @@ function renderPenghuni(data) {
       '</td>' +
 
       '<td>' +
+      escapeHTML(row.NIK) +
+      '</td>' +
+
+      '<td>' +
       escapeHTML(row.NO_HP) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.EMAIL) +
       '</td>' +
 
       '<td>' +
@@ -1296,13 +1419,19 @@ function renderPenghuni(data) {
       '</td>' +
 
       '<td>' +
+      formatDate(row.TANGGAL_KELUAR) +
+      '</td>' +
+
+      '<td>' +
       escapeHTML(row.STATUS) +
+      '</td>' +
+
+      '<td>' +
+      escapeHTML(row.CATATAN) +
       '</td>';
 
 
-    tbody.appendChild(
-      tr
-    );
+    tbody.appendChild(tr);
 
   });
 
@@ -1315,10 +1444,33 @@ function renderPenghuni(data) {
 
 function renderPembayaran(data) {
 
-  const tbody =
+  const table =
     document.getElementById(
       'pembayaranTable'
     );
+
+
+  if (!table) {
+    return;
+  }
+
+
+  let tbody;
+
+
+  if (
+    table.tagName &&
+    table.tagName.toLowerCase() === 'tbody'
+  ) {
+
+    tbody = table;
+
+  } else {
+
+    tbody =
+      table.querySelector('tbody');
+
+  }
 
 
   if (!tbody) {
@@ -1326,8 +1478,7 @@ function renderPembayaran(data) {
   }
 
 
-  tbody.innerHTML =
-    '';
+  tbody.innerHTML = '';
 
 
   if (
@@ -1337,7 +1488,7 @@ function renderPembayaran(data) {
 
     tbody.innerHTML =
       '<tr>' +
-      '<td colspan="9">' +
+      '<td colspan="20">' +
       'Belum ada data pembayaran.' +
       '</td>' +
       '</tr>';
@@ -1350,9 +1501,7 @@ function renderPembayaran(data) {
   data.forEach(function(row) {
 
     const tr =
-      document.createElement(
-        'tr'
-      );
+      document.createElement('tr');
 
 
     tr.innerHTML =
@@ -1394,9 +1543,7 @@ function renderPembayaran(data) {
       '</td>';
 
 
-    tbody.appendChild(
-      tr
-    );
+    tbody.appendChild(tr);
 
   });
 
@@ -1414,16 +1561,7 @@ function getValue(id) {
 
 
   if (!element) {
-
-    console.warn(
-      'Element #' +
-      id +
-      ' tidak ditemukan.'
-    );
-
-
     return '';
-
   }
 
 
@@ -1496,9 +1634,7 @@ function formatDate(value) {
     )
   ) {
 
-    return escapeHTML(
-      value
-    );
+    return escapeHTML(value);
 
   }
 
@@ -1561,35 +1697,35 @@ function escapeHTML(value) {
    API STATUS
    ================================================= */
 
-function setAPIStatus(connected) {
+function setApiStatus(connected) {
 
-  const element =
+  const status =
     document.getElementById(
       'apiStatus'
     );
 
 
-  if (!element) {
+  if (!status) {
     return;
   }
 
 
   if (connected) {
 
-    element.classList.add(
+    status.classList.add(
       'online'
     );
 
-    element.title =
+    status.title =
       'API Connected';
 
   } else {
 
-    element.classList.remove(
+    status.classList.remove(
       'online'
     );
 
-    element.title =
+    status.title =
       'API Disconnected';
 
   }
@@ -1598,42 +1734,23 @@ function setAPIStatus(connected) {
 
 
 /* =================================================
-   INITIALIZATION
+   INITIALIZE AFTER LOGIN
    ================================================= */
 
-let appInitialized = false;
-
-
-async function initApp() {
-
-  if (!isLoggedIn()) {
-    return;
-  }
-
-
-  if (appInitialized) {
-    return;
-  }
-
-
-  appInitialized = true;
-
+async function initDashboardAfterLogin() {
 
   console.log(
     '================================='
   );
 
-
   console.log(
     'KOST PUTRI APP START'
   );
-
 
   console.log(
     'API:',
     API_URL
   );
-
 
   console.log(
     '================================='
@@ -1652,19 +1769,21 @@ async function initApp() {
     ) {
 
       throw new Error(
-        test?.message ||
-        'API tidak aktif.'
+        test &&
+        test.message
+          ? test.message
+          : 'API tidak aktif.'
       );
 
     }
 
 
-    setAPIStatus(true);
-
-
     console.log(
       'API CONNECTED'
     );
+
+
+    setApiStatus(true);
 
 
     await loadDashboard();
@@ -1673,24 +1792,12 @@ async function initApp() {
 
     await loadPenghuni();
 
+    await loadPembayaran();
+
 
     console.log(
       'DATA BERHASIL DIMUAT'
     );
-
-
-    const loading =
-      document.getElementById(
-        'loading'
-      );
-
-
-    if (loading) {
-
-      loading.style.display =
-        'none';
-
-    }
 
 
   } catch (error) {
@@ -1701,21 +1808,18 @@ async function initApp() {
     );
 
 
-    appInitialized = false;
+    setApiStatus(false);
 
 
-    setAPIStatus(false);
-
-
-    const dashboardMessage =
+    const loading =
       document.getElementById(
-        'dashboardMessage'
+        'loading'
       );
 
 
-    if (dashboardMessage) {
+    if (loading) {
 
-      dashboardMessage.textContent =
+      loading.textContent =
         'Gagal memuat data: ' +
         error.message;
 
@@ -1727,35 +1831,48 @@ async function initApp() {
 
 
 /* =================================================
-   START
+   INITIALIZATION
+   ================================================= */
+
+function initApp() {
+
+  console.log(
+    'KOST PUTRI APP INITIALIZING...'
+  );
+
+
+  if (isLoggedIn()) {
+
+    showAppPage();
+
+    updateUserDisplay();
+
+    initDashboardAfterLogin();
+
+  } else {
+
+    showLoginPage();
+
+  }
+
+}
+
+
+/* =================================================
+   CLOSE MODAL WHEN CLICK OUTSIDE
    ================================================= */
 
 document.addEventListener(
-  'DOMContentLoaded',
-  function() {
+  'click',
+  function(event) {
 
-    checkLogin();
+    if (
+      event.target.classList &&
+      event.target.classList.contains('modal')
+    ) {
 
-
-    const loginForm =
-      document.getElementById(
-        'loginForm'
-      );
-
-
-    if (loginForm) {
-
-      loginForm.addEventListener(
-        'submit',
-        loginUser
-      );
-
-    }
-
-
-    if (isLoggedIn()) {
-
-      initApp();
+      event.target.style.display =
+        'none';
 
     }
 
@@ -1764,7 +1881,21 @@ document.addEventListener(
 
 
 /* =================================================
-   GLOBAL
+   DOM READY
+   ================================================= */
+
+document.addEventListener(
+  'DOMContentLoaded',
+  function() {
+
+    initApp();
+
+  }
+);
+
+
+/* =================================================
+   GLOBAL FUNCTIONS
    ================================================= */
 
 window.apiGet =
@@ -1775,6 +1906,15 @@ window.apiPost =
 
 window.testAPI =
   testAPI;
+
+window.loginUser =
+  loginUser;
+
+window.logoutUser =
+  logoutUser;
+
+window.isLoggedIn =
+  isLoggedIn;
 
 window.loadDashboard =
   loadDashboard;
@@ -1812,12 +1952,6 @@ window.openPembayaranForm =
 window.closeModal =
   closeModal;
 
-window.loginUser =
-  loginUser;
-
-window.logoutUser =
-  logoutUser;
-
-window.checkLogin =
-  checkLogin;
+window.updateUserDisplay =
+  updateUserDisplay;
 ```
