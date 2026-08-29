@@ -1,3 +1,4 @@
+```javascript
 /*************************************************
  * KOST PUTRI MANAGEMENT SYSTEM
  * GITHUB PAGES → APPS SCRIPT → GOOGLE SHEETS
@@ -5,11 +6,163 @@
 
 
 /* =================================================
-   API URL
+   API
    ================================================= */
 
 const API_URL =
   'https://script.google.com/macros/s/AKfycbyQKGeA74rDh6jv1aQn2t0wAoIxmA2lhIlVY_ToR6gsX0BsWygwvLGMiXnMIO0OFjJWzw/exec';
+
+
+/* =================================================
+   LOGIN
+   ================================================= */
+
+const LOGIN_USERNAME = 'admin';
+const LOGIN_PASSWORD = 'admin123';
+
+
+function isLoggedIn() {
+
+  return (
+    sessionStorage.getItem('kostLogin') === 'true'
+  );
+
+}
+
+
+function checkLogin() {
+
+  const loginPage =
+    document.getElementById('loginPage');
+
+  const appContainer =
+    document.getElementById('appContainer');
+
+
+  if (isLoggedIn()) {
+
+    if (loginPage) {
+      loginPage.style.display = 'none';
+    }
+
+    if (appContainer) {
+      appContainer.style.display = 'flex';
+    }
+
+  } else {
+
+    if (loginPage) {
+      loginPage.style.display = 'flex';
+    }
+
+    if (appContainer) {
+      appContainer.style.display = 'none';
+    }
+
+  }
+
+}
+
+
+function loginUser(event) {
+
+  if (event) {
+    event.preventDefault();
+  }
+
+
+  const usernameElement =
+    document.getElementById('loginUsername');
+
+  const passwordElement =
+    document.getElementById('loginPassword');
+
+  const message =
+    document.getElementById('loginMessage');
+
+
+  const username =
+    usernameElement
+      ? usernameElement.value.trim()
+      : '';
+
+
+  const password =
+    passwordElement
+      ? passwordElement.value
+      : '';
+
+
+  if (
+    username === LOGIN_USERNAME &&
+    password === LOGIN_PASSWORD
+  ) {
+
+    sessionStorage.setItem(
+      'kostLogin',
+      'true'
+    );
+
+
+    if (message) {
+      message.textContent = '';
+    }
+
+
+    if (passwordElement) {
+      passwordElement.value = '';
+    }
+
+
+    checkLogin();
+
+
+    initApp();
+
+
+  } else {
+
+    if (message) {
+
+      message.textContent =
+        'Username atau password salah.';
+
+      message.style.color =
+        '#dc2626';
+
+    }
+
+
+    if (passwordElement) {
+      passwordElement.value = '';
+    }
+
+  }
+
+}
+
+
+function logoutUser() {
+
+  const confirmLogout =
+    confirm(
+      'Apakah kamu yakin ingin logout?'
+    );
+
+
+  if (!confirmLogout) {
+    return;
+  }
+
+
+  sessionStorage.removeItem(
+    'kostLogin'
+  );
+
+
+  location.reload();
+
+}
 
 
 /* =================================================
@@ -26,16 +179,30 @@ function apiGet(action, params = {}) {
       '_' +
       Math.floor(Math.random() * 100000);
 
+
     const script =
       document.createElement('script');
 
+
     let finished = false;
+
+    let timeout;
+
 
     const query =
       new URLSearchParams();
 
-    query.append('action', action);
-    query.append('callback', callbackName);
+
+    query.append(
+      'action',
+      action
+    );
+
+
+    query.append(
+      'callback',
+      callbackName
+    );
 
 
     Object.keys(params).forEach(function(key) {
@@ -55,9 +222,6 @@ function apiGet(action, params = {}) {
     });
 
 
-    let timeout;
-
-
     window[callbackName] =
       function(data) {
 
@@ -65,15 +229,24 @@ function apiGet(action, params = {}) {
           return;
         }
 
+
         finished = true;
+
 
         clearTimeout(timeout);
 
+
         delete window[callbackName];
 
+
         if (script.parentNode) {
-          script.parentNode.removeChild(script);
+
+          script.parentNode.removeChild(
+            script
+          );
+
         }
+
 
         resolve(data);
 
@@ -85,6 +258,7 @@ function apiGet(action, params = {}) {
       '?' +
       query.toString();
 
+
     script.async = true;
 
 
@@ -95,15 +269,24 @@ function apiGet(action, params = {}) {
           return;
         }
 
+
         finished = true;
+
 
         clearTimeout(timeout);
 
+
         delete window[callbackName];
 
+
         if (script.parentNode) {
-          script.parentNode.removeChild(script);
+
+          script.parentNode.removeChild(
+            script
+          );
+
         }
+
 
         reject(
           new Error(
@@ -114,7 +297,9 @@ function apiGet(action, params = {}) {
       };
 
 
-    document.head.appendChild(script);
+    document.head.appendChild(
+      script
+    );
 
 
     timeout =
@@ -124,19 +309,28 @@ function apiGet(action, params = {}) {
           return;
         }
 
+
         finished = true;
+
 
         delete window[callbackName];
 
+
         if (script.parentNode) {
-          script.parentNode.removeChild(script);
+
+          script.parentNode.removeChild(
+            script
+          );
+
         }
+
 
         reject(
           new Error(
             'API timeout. Google Apps Script tidak merespons.'
           )
         );
+
 
       }, 20000);
 
@@ -154,10 +348,13 @@ async function apiPost(data) {
   const payload =
     Object.assign({}, data);
 
+
   const action =
     payload.action || '';
 
+
   delete payload.action;
+
 
   return apiGet(
     action,
@@ -173,28 +370,17 @@ async function apiPost(data) {
 
 async function testAPI() {
 
-  try {
+  const result =
+    await apiGet('test');
 
-    const result =
-      await apiGet('test');
 
-    console.log(
-      'API TEST:',
-      result
-    );
+  console.log(
+    'API TEST:',
+    result
+  );
 
-    return result;
 
-  } catch (error) {
-
-    console.error(
-      'API TEST ERROR:',
-      error
-    );
-
-    throw error;
-
-  }
+  return result;
 
 }
 
@@ -208,7 +394,10 @@ async function loadDashboard() {
   try {
 
     const result =
-      await apiGet('dashboard');
+      await apiGet(
+        'dashboard'
+      );
+
 
     console.log(
       'DASHBOARD:',
@@ -271,23 +460,17 @@ async function loadDashboard() {
     );
 
 
-    const message =
-      document.getElementById(
-        'dashboardMessage'
-      );
-
-    if (message) {
-
-      message.textContent =
-        'Data dashboard berhasil dimuat.';
-
-    }
+    setText(
+      'dashboardMessage',
+      'Data dashboard berhasil dimuat.'
+    );
 
 
     setAPIStatus(true);
 
 
     return result;
+
 
   } catch (error) {
 
@@ -296,7 +479,9 @@ async function loadDashboard() {
       error
     );
 
+
     setAPIStatus(false);
+
 
     throw error;
 
@@ -311,47 +496,37 @@ async function loadDashboard() {
 
 async function loadKamar() {
 
-  try {
-
-    const result =
-      await apiGet('kamar');
-
-    console.log(
-      'KAMAR:',
-      result
+  const result =
+    await apiGet(
+      'kamar'
     );
 
 
-    if (
-      !result ||
-      result.success !== true
-    ) {
-
-      throw new Error(
-        result?.message ||
-        'Gagal mengambil data kamar.'
-      );
-
-    }
+  console.log(
+    'KAMAR:',
+    result
+  );
 
 
-    renderKamar(
-      result.data || []
+  if (
+    !result ||
+    result.success !== true
+  ) {
+
+    throw new Error(
+      result?.message ||
+      'Gagal mengambil data kamar.'
     );
-
-
-    return result;
-
-  } catch (error) {
-
-    console.error(
-      'Load kamar error:',
-      error
-    );
-
-    throw error;
 
   }
+
+
+  renderKamar(
+    result.data || []
+  );
+
+
+  return result;
 
 }
 
@@ -362,47 +537,37 @@ async function loadKamar() {
 
 async function loadPenghuni() {
 
-  try {
-
-    const result =
-      await apiGet('penghuni');
-
-    console.log(
-      'PENGHUNI:',
-      result
+  const result =
+    await apiGet(
+      'penghuni'
     );
 
 
-    if (
-      !result ||
-      result.success !== true
-    ) {
-
-      throw new Error(
-        result?.message ||
-        'Gagal mengambil data penghuni.'
-      );
-
-    }
+  console.log(
+    'PENGHUNI:',
+    result
+  );
 
 
-    renderPenghuni(
-      result.data || []
+  if (
+    !result ||
+    result.success !== true
+  ) {
+
+    throw new Error(
+      result?.message ||
+      'Gagal mengambil data penghuni.'
     );
-
-
-    return result;
-
-  } catch (error) {
-
-    console.error(
-      'Load penghuni error:',
-      error
-    );
-
-    throw error;
 
   }
+
+
+  renderPenghuni(
+    result.data || []
+  );
+
+
+  return result;
 
 }
 
@@ -416,7 +581,10 @@ async function loadPembayaran() {
   try {
 
     const result =
-      await apiGet('pembayaran');
+      await apiGet(
+        'pembayaran'
+      );
+
 
     console.log(
       'PEMBAYARAN:',
@@ -444,12 +612,14 @@ async function loadPembayaran() {
 
     return result;
 
+
   } catch (error) {
 
     console.error(
       'Load pembayaran error:',
       error
     );
+
 
     throw error;
 
@@ -484,7 +654,8 @@ async function saveKamar(event) {
       getValue('harga'),
 
     status:
-      getValue('statusKamar') || 'KOSONG',
+      getValue('statusKamar') ||
+      'KOSONG',
 
     fasilitas:
       getValue('fasilitas'),
@@ -600,7 +771,7 @@ async function savePenghuni(event) {
       getValue('tanggalMasuk'),
 
     tanggalKeluar:
-      getValue('tanggalKeluar'),
+      '',
 
     status:
       'AKTIF',
@@ -983,17 +1154,12 @@ function renderKamar(data) {
 
 
   if (!tbody) {
-
-    console.warn(
-      'Element #kamarTable tidak ditemukan.'
-    );
-
     return;
-
   }
 
 
-  tbody.innerHTML = '';
+  tbody.innerHTML =
+    '';
 
 
   if (
@@ -1052,7 +1218,9 @@ function renderKamar(data) {
       '</td>';
 
 
-    tbody.appendChild(tr);
+    tbody.appendChild(
+      tr
+    );
 
   });
 
@@ -1072,17 +1240,12 @@ function renderPenghuni(data) {
 
 
   if (!tbody) {
-
-    console.warn(
-      'Element #penghuniTable tidak ditemukan.'
-    );
-
     return;
-
   }
 
 
-  tbody.innerHTML = '';
+  tbody.innerHTML =
+    '';
 
 
   if (
@@ -1137,7 +1300,9 @@ function renderPenghuni(data) {
       '</td>';
 
 
-    tbody.appendChild(tr);
+    tbody.appendChild(
+      tr
+    );
 
   });
 
@@ -1157,17 +1322,12 @@ function renderPembayaran(data) {
 
 
   if (!tbody) {
-
-    console.warn(
-      'Element #pembayaranTable tidak ditemukan.'
-    );
-
     return;
-
   }
 
 
-  tbody.innerHTML = '';
+  tbody.innerHTML =
+    '';
 
 
   if (
@@ -1234,7 +1394,9 @@ function renderPembayaran(data) {
       '</td>';
 
 
-    tbody.appendChild(tr);
+    tbody.appendChild(
+      tr
+    );
 
   });
 
@@ -1254,9 +1416,11 @@ function getValue(id) {
   if (!element) {
 
     console.warn(
-      'Element #' + id +
+      'Element #' +
+      id +
       ' tidak ditemukan.'
     );
+
 
     return '';
 
@@ -1437,20 +1601,39 @@ function setAPIStatus(connected) {
    INITIALIZATION
    ================================================= */
 
+let appInitialized = false;
+
+
 async function initApp() {
+
+  if (!isLoggedIn()) {
+    return;
+  }
+
+
+  if (appInitialized) {
+    return;
+  }
+
+
+  appInitialized = true;
+
 
   console.log(
     '================================='
   );
 
+
   console.log(
     'KOST PUTRI APP START'
   );
+
 
   console.log(
     'API:',
     API_URL
   );
+
 
   console.log(
     '================================='
@@ -1518,22 +1701,10 @@ async function initApp() {
     );
 
 
+    appInitialized = false;
+
+
     setAPIStatus(false);
-
-
-    const loading =
-      document.getElementById(
-        'loading'
-      );
-
-
-    if (loading) {
-
-      loading.textContent =
-        'Gagal memuat data: ' +
-        error.message;
-
-    }
 
 
     const dashboardMessage =
@@ -1563,14 +1734,37 @@ document.addEventListener(
   'DOMContentLoaded',
   function() {
 
-    initApp();
+    checkLogin();
+
+
+    const loginForm =
+      document.getElementById(
+        'loginForm'
+      );
+
+
+    if (loginForm) {
+
+      loginForm.addEventListener(
+        'submit',
+        loginUser
+      );
+
+    }
+
+
+    if (isLoggedIn()) {
+
+      initApp();
+
+    }
 
   }
 );
 
 
 /* =================================================
-   GLOBAL FUNCTIONS
+   GLOBAL
    ================================================= */
 
 window.apiGet =
@@ -1617,3 +1811,13 @@ window.openPembayaranForm =
 
 window.closeModal =
   closeModal;
+
+window.loginUser =
+  loginUser;
+
+window.logoutUser =
+  logoutUser;
+
+window.checkLogin =
+  checkLogin;
+```
