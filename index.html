@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0">
+
+  <title>Kost Putri Management</title>
+
+  <link
+    rel="stylesheet"
+    href="style.css">
+
+</head>
+
+
+<body>
+
+
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+  <div class="logo">
+    🏠 Kost Putri
+  </div>
+
+
+  <nav>
+
+    <button
+      onclick="showPage('dashboard')">
+      📊 Dashboard
+    </button>
+
+
+    <button
+      onclick="showPage('kamar')">
+      🛏️ Kamar
+    </button>
+
+
+    <button
+      onclick="showPage('penghuni')">
+      👩 Penghuni
+    </button>
+
+
+    <button
+      onclick="showPage('booking')">
+      📅 Booking
+    </button>
+
+
+    <button
+      onclick="showPage('kontrak')">
+      📄 Kontrak
+    </button>
+
+
+    <button
+      onclick="showPage('pembayaran')">
+      💰 Pembayaran
+    </button>
+
+
+    <button
+      onclick="showPage('invoice')">
+      🧾 Invoice
+    </button>
+
+  </nav>
+
+</aside>
+
+
+
+<!-- MAIN -->
+
+<main class="main">
+
+
+  <!-- HEADER -->
+
+  <header class="header">
+
+    <div>
+
+      <h1 id="pageTitle">
+        Dashboard
+      </h1>
+
+      <p>
+        Kost Putri Management System
+      </p>
+
+    </div>
+
+
+    <div class="status">
+
+      <span
+        id="apiStatus"
+        class="status-dot">
+      </span>
+
+      API
+
+    </div>
+
+  </header>
+
+
+
+  <!-- DASHBOARD -->
+
+  <section
+    id="dashboard"
+    class="page active">
+
+
+    <div class="cards">
+
+
+      <div class="card">
+
+        <div class="card-icon">
+          🛏️
+        </div>
+
+        <div>
+
+          <span>
+            Total Kamar
+          </span>
+
+          <strong
+            id="totalKamar">
+            0
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="card-icon">
+          🟢
+        </div>
+
+        <div>
+
+          <span>
+            Kamar Kosong
+          </span>
+
+          <strong
+            id="kamarKosong">
+            0
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="card-icon">
+          🔴
+        </div>
+
+        <div>
+
+          <span>
+            Kamar Terisi
+          </span>
+
+          <strong
+            id="kamarTerisi">
+            0
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="card-icon">
+          👩
+        </div>
+
+        <div>
+
+          <span>
+            Penghuni Aktif
+          </span>
+
+          <strong
+            id="totalPenghuni">
+            0
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="card-icon">
+          📅
+        </div>
+
+        <div>
+
+          <span>
+            Booking
+          </span>
+
+          <strong
+            id="bookingAktif">
+            0
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="card-icon">
+          💰
+        </div>
+
+        <div>
+
+          <span>
+            Pendapatan
+          </span>
+
+          <strong
+            id="totalPendapatan">
+            Rp 0
+          </strong>
+
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+    <div class="panel">
+
+      <div class="panel-header">
+
+        <h2>
+          Ringkasan
+        </h2>
+
+        <button
+          onclick="loadDashboard()"
+          class="btn-secondary">
+          🔄 Refresh
+        </button>
+
+      </div>
+
+
+      <p id="dashboardMessage">
+        Memuat data...
+      </p>
+
+    </div>
+
+
+  </section>
+
+
+
+  <!-- KAMAR -->
+
+  <section
+    id="kamar"
+    class="page">
+
+    <div class="panel">
+
+      <div class="panel-header">
+
+        <h2>
+          Data Kamar
+        </h2>
+
+        <button
+          onclick="openKamarForm()"
+          class="btn-primary">
+          + Tambah Kamar
+        </button>
+
+      </div>
+
+
+      <div class="table-container">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>ID</th>
+              <th>Nomor</th>
+              <th>Lantai</th>
+              <th>Tipe</th>
+              <th>Harga</th>
+              <th>Status</th>
+              <th>Fasilitas</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody
+            id="kamarTable">
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- PENGHUNI -->
+
+  <section
+    id="penghuni"
+    class="page">
+
+    <div class="panel">
+
+      <div class="panel-header">
+
+        <h2>
+          Data Penghuni
+        </h2>
+
+        <button
+          onclick="openPenghuniForm()"
+          class="btn-primary">
+          + Tambah Penghuni
+        </button>
+
+      </div>
+
+
+      <div class="table-container">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>ID</th>
+              <th>Nama</th>
+              <th>No HP</th>
+              <th>Kamar</th>
+              <th>Tanggal Masuk</th>
+              <th>Status</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody
+            id="penghuniTable">
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- BOOKING -->
+
+  <section
+    id="booking"
+    class="page">
+
+    <div class="empty-page">
+
+      <div>
+        📅
+      </div>
+
+      <h2>
+        Booking
+      </h2>
+
+      <p>
+        Modul Booking akan kita aktifkan berikutnya.
+      </p>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- KONTRAK -->
+
+  <section
+    id="kontrak"
+    class="page">
+
+    <div class="empty-page">
+
+      <div>
+        📄
+      </div>
+
+      <h2>
+        Kontrak
+      </h2>
+
+      <p>
+        Modul Kontrak akan kita aktifkan berikutnya.
+      </p>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- PEMBAYARAN -->
+
+  <section
+    id="pembayaran"
+    class="page">
+
+    <div class="empty-page">
+
+      <div>
+        💰
+      </div>
+
+      <h2>
+        Pembayaran
+      </h2>
+
+      <p>
+        Sistem pembayaran dibuat
+        <b>all-in</b>.
+      </p>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- INVOICE -->
+
+  <section
+    id="invoice"
+    class="page">
+
+    <div class="empty-page">
+
+      <div>
+        🧾
+      </div>
+
+      <h2>
+        Invoice
+      </h2>
+
+      <p>
+        Modul Invoice akan kita aktifkan berikutnya.
+      </p>
+
+    </div>
+
+  </section>
+
+
+</main>
+
+
+
+<!-- MODAL KAMAR -->
+
+<div
+  id="kamarModal"
+  class="modal">
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <h2>
+        Tambah Kamar
+      </h2>
+
+      <button
+        onclick="closeModal('kamarModal')">
+        ✕
+      </button>
+
+    </div>
+
+
+    <form
+      onsubmit="saveKamar(event)">
+
+
+      <label>
+        Nomor Kamar
+      </label>
+
+      <input
+        id="nomorKamar"
+        required
+        placeholder="Contoh: A-01">
+
+
+      <label>
+        Lantai
+      </label>
+
+      <input
+        id="lantai"
+        required
+        placeholder="Contoh: 1">
+
+
+      <label>
+        Tipe Kamar
+      </label>
+
+      <input
+        id="tipe"
+        required
+        placeholder="Contoh: Standard">
+
+
+      <label>
+        Harga / Bulan
+      </label>
+
+      <input
+        type="number"
+        id="harga"
+        required
+        placeholder="1500000">
+
+
+      <label>
+        Status
+      </label>
+
+      <select id="statusKamar">
+
+        <option value="KOSONG">
+          Kosong
+        </option>
+
+        <option value="TERISI">
+          Terisi
+        </option>
+
+      </select>
+
+
+      <label>
+        Fasilitas
+      </label>
+
+      <textarea
+        id="fasilitas"
+        placeholder="AC, WiFi, kamar mandi...">
+      </textarea>
+
+
+      <label>
+        Catatan
+      </label>
+
+      <textarea
+        id="catatanKamar">
+      </textarea>
+
+
+      <button
+        type="submit"
+        class="btn-primary full">
+        Simpan Kamar
+      </button>
+
+
+    </form>
+
+  </div>
+
+</div>
+
+
+
+<!-- MODAL PENGHUNI -->
+
+<div
+  id="penghuniModal"
+  class="modal">
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <h2>
+        Tambah Penghuni
+      </h2>
+
+      <button
+        onclick="closeModal('penghuniModal')">
+        ✕
+      </button>
+
+    </div>
+
+
+    <form
+      onsubmit="savePenghuni(event)">
+
+
+      <label>
+        Nama Lengkap
+      </label>
+
+      <input
+        id="namaPenghuni"
+        required>
+
+
+      <label>
+        NIK
+      </label>
+
+      <input
+        id="nik">
+
+
+      <label>
+        No HP
+      </label>
+
+      <input
+        id="noHp"
+        required>
+
+
+      <label>
+        Email
+      </label>
+
+      <input
+        type="email"
+        id="email">
+
+
+      <label>
+        Kamar ID
+      </label>
+
+      <input
+        id="kamarId"
+        placeholder="Contoh: KMR-12345678">
+
+
+      <label>
+        Tanggal Masuk
+      </label>
+
+      <input
+        type="date"
+        id="tanggalMasuk"
+        required>
+
+
+      <label>
+        Catatan
+      </label>
+
+      <textarea
+        id="catatanPenghuni">
+      </textarea>
+
+
+      <button
+        type="submit"
+        class="btn-primary full">
+        Simpan Penghuni
+      </button>
+
+
+    </form>
+
+  </div>
+
+</div>
+
+
+
+<script
+  src="app.js">
+</script>
+
+
+</body>
+
+</html>
